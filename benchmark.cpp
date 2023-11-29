@@ -94,10 +94,9 @@ int main(int argc, char** argv)
       // Number of threads in the current team
       int nthreads = omp_get_num_threads();
 
-#pragma omp critical
-      {
-         std::cout << "Hello world, I'm thread " << thread_id << " out of " << nthreads << " total threads. " << std::endl; 
-      }
+      if(thread_id==0)
+	      std::cout << "Hello world, I'm thread " << thread_id << " out of " << nthreads << " total threads. " << std::endl; 
+      
 
       // Each thread must add itself to the Marker API, therefore must be
       // in parallel region
