@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.14)
 project(hw2 LANGUAGES C CXX)
 
 set(CMAKE_BUILD_TYPE "Release")
 
 find_package(BLAS REQUIRED)
+find_package(MPI REQUIRED)
 
 # We require the GNU compiler for this assignment.
 if (NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
@@ -47,5 +48,12 @@ target_link_options(benchmark-blocked-omp PRIVATE -fopenmp)
 target_compile_options(benchmark-blocked-omp PRIVATE -fopenmp -Wall -pedantic -march=native)
 set(BENCHMARK "blocked-omp")
 configure_file(job.in job-${BENCHMARK})
+
+# add_executable(mpi_2dmesh mpi_2dmesh.cpp)
+# # include directories
+# target_include_directories(mpi_2dmesh PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+
+# # link libraries
+# target_link_libraries(mpi_2dmesh PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 
 # eof
