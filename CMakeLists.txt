@@ -1,0 +1,51 @@
+cmake_minimum_required(VERSION 3.16)
+project(hw2 LANGUAGES C CXX)
+
+set(CMAKE_BUILD_TYPE "Release")
+
+find_package(BLAS REQUIRED)
+
+# We require the GNU compiler for this assignment.
+if (NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+    set(Prg-Intel "PrgEnv-intel")
+    set(Prg-Clang "PrgEnv-cray")
+    message(WARNING
+            "Must use GNU Compiler for submission. Make sure you ran:\n"
+            "module swap ${Prg-${CMAKE_C_COMPILER_ID}} PrgEnv-gnu")
+endif ()
+
+# Common library target for benchmarking.
+add_library(benchmark OBJECT benchmark.cpp)
+#target_compile_features(benchmark PRIVATE cxx_std_11)
+target_compile_options(benchmark PRIVATE -fopenmp -march=native)
+
+add_executable(benchmark-basic-omp dgemm-basic-omp.cpp)
+target_link_libraries(benchmark-basic-omp PRIVATE benchmark ${BLAS_LIBRARIES})
+target_link_options(benchmark-basic-omp PRIVATE -fopenmp)
+
+#target_compile_features(benchmark-basic-omp PRIVATE c_std_11 c_restrict)
+target_compile_options(benchmark-basic-omp PRIVATE -fopenmp -Wall -pedantic -march=native)
+set(BENCHMARK "basic-omp")
+configure_file(job.in job-${BENCHMARK})
+
+add_executable(benchmark-blas dgemm-blas.cpp)
+target_link_libraries(benchmark-blas PRIVATE benchmark ${BLAS_LIBRARIES})
+target_link_options(benchmark-blas PRIVATE -fopenmp)
+
+target_compile_features(benchmark-blas PRIVATE c_std_11 c_restrict)
+target_compile_options(benchmark-blas PRIVATE -Wall -pedantic -march=native)
+set(BENCHMARK "blas")
+configure_file(job.in job-${BENCHMARK})
+
+add_executable(benchmark-blocked-omp dgemm-blocked-omp.cpp)
+add_library(bench-blocked-omp OBJECT benchmark.cpp)
+target_compile_definitions(bench-blocked-omp PRIVATE -DBLOCKED)
+target_compile_options(bench-blocked-omp PRIVATE -fopenmp)
+target_link_libraries(benchmark-blocked-omp PRIVATE bench-blocked-omp ${BLAS_LIBRARIES})
+target_link_options(benchmark-blocked-omp PRIVATE -fopenmp)
+
+target_compile_options(benchmark-blocked-omp PRIVATE -fopenmp -Wall -pedantic -march=native)
+set(BENCHMARK "blocked-omp")
+configure_file(job.in job-${BENCHMARK})
+
+# eof
