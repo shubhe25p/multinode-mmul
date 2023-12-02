@@ -496,9 +496,9 @@ int main(int ac, char *av[]) {
    as.decomp = as.Cdecomp;
    computeMeshDecomposition(&as, &CtileArray);
    
-   printf("Rank %d has %d tiles in A\n", as.myrank, AtileArray.size());
-   printf("Rank %d has %d tiles in B\n", as.myrank, BtileArray.size());
-   printf("Rank %d has %d tiles in C\n", as.myrank, CtileArray.size());
+   printf("Rank %d has %d tiles in A\n", as.myrank, AtileArray[0].size());
+   printf("Rank %d has %d tiles in B\n", as.myrank, BtileArray[0].size());
+   printf("Rank %d has %d tiles in C\n", as.myrank, CtileArray[0].size());
    if (as.myrank == 0 && as.debug==1) // print out the AppState and tileArray
    {
       as.print();
