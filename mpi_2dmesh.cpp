@@ -137,7 +137,7 @@ computeMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray) 
    int xtiles, ytiles;
    int ntiles;
 
-   if (as->Bdecomp == ROW_DECOMP) { // this is where B will go
+   if (as->decomp == ROW_DECOMP) { // this is where B will go
       // in a row decomposition, each tile width is the same as the mesh width
       // the mesh is decomposed along height
       xtiles = 1;
@@ -166,7 +166,7 @@ computeMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray) 
          tileArray->push_back(tiles);
       }
    }
-   else if (as->Adecomp == COLUMN_DECOMP) { // this is where A will go
+   else if (as->decomp == COLUMN_DECOMP) { // this is where A will go
       // in a columne decomposition, each tile height is the same as the mesh height
       // the mesh is decomposed along width
       ytiles = 1;
@@ -489,9 +489,11 @@ int main(int ac, char *av[]) {
    vector < vector < Tile2D > > AtileArray;
    vector < vector < Tile2D > > BtileArray;
    vector < vector < Tile2D > > CtileArray;
-
+   as.decomp = as.Adecomp;
    computeMeshDecomposition(&as, &AtileArray);
+   as.decomp = as.Bdecomp;
    computeMeshDecomposition(&as, &BtileArray);
+   as.decomp = as.Cdecomp;
    computeMeshDecomposition(&as, &CtileArray);
    
    printf("Rank %d has %d tiles in A\n", as.myrank, AtileArray.size());
