@@ -71,10 +71,10 @@ class AppState
       Bdecomp=ROW_DECOMP;
       Cdecomp=TILE_DECOMP;
 
-      A.resize(0);
-      B.resize(0);
-      C.resize(0);
-      
+      A.resize(global_mesh_size[0]*global_mesh_size[1]);
+      B.resize(global_mesh_size[0]*global_mesh_size[1]);
+      C.resize(global_mesh_size[0]*global_mesh_size[1]);
+
    } // end AppState constructor
 
    void print(void)
