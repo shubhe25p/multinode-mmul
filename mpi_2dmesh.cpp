@@ -496,9 +496,6 @@ int main(int ac, char *av[]) {
    as.decomp = as.Cdecomp;
    computeMeshDecomposition(&as, &CtileArray);
    
-   printf("Rank %d has %d tiles in A\n", as.myrank, AtileArray[0].size());
-   printf("Rank %d has %d tiles in B\n", as.myrank, BtileArray[0].size());
-   printf("Rank %d has %d tiles in C\n", as.myrank, CtileArray[0].size());
    if (as.myrank == 0 && as.debug==1) // print out the AppState and tileArray
    {
       as.print();
@@ -519,9 +516,9 @@ int main(int ac, char *av[]) {
 #if DEBUG_TRACE
          printf("\n\n Rank 0 is loading input \n");
 #endif
-         //fill(as.A.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
-         //fill(as.B.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
-         //fill(as.C.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
+         fill(as.A.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
+         fill(as.B.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
+         fill(as.C.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
       }
       MPI_Barrier(MPI_COMM_WORLD);
 
