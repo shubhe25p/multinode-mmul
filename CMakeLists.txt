@@ -49,11 +49,11 @@ target_compile_options(benchmark-blocked-omp PRIVATE -fopenmp -Wall -pedantic -m
 set(BENCHMARK "blocked-omp")
 configure_file(job.in job-${BENCHMARK})
 
-# add_executable(mpi_2dmesh mpi_2dmesh.cpp)
-# # include directories
-# target_include_directories(mpi_2dmesh PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+add_executable(mpi_2dmesh mpi_2dmesh.cpp)
+# include directories
+target_include_directories(mpi_2dmesh PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
 
-# # link libraries
-# target_link_libraries(mpi_2dmesh PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+# link libraries
+target_link_libraries(mpi_2dmesh PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 
 # eof
