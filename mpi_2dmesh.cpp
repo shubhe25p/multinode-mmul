@@ -154,7 +154,7 @@ computeMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray) 
       ylocs[ytiles] = as->global_mesh_size[1];
 
       // then, create tiles along the y axis
-      int rank=0.5;
+      int rank=0;
       for (int i=0; i<ytiles; i++)
       {
          vector < Tile2D > tiles;
@@ -188,7 +188,7 @@ computeMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray) 
       {
          int width =  xlocs[i+1]-xlocs[i];
          int height = as->global_mesh_size[1];
-         Tile2D t = Tile2D(xlocs[i], 0, width, height, i+1);
+         Tile2D t = Tile2D(xlocs[i], 0, width, height, i);
          tile_row.push_back(t);
       }
       tileArray->push_back(tile_row);
@@ -237,6 +237,69 @@ computeMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray) 
          }
          tileArray->push_back(tile_row);
       }
+   }
+}
+
+void
+extendMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray, int extendBy) {
+   int xtiles, ytiles;
+   int ntiles;
+
+   if (as->decomp == ROW_DECOMP) { // this is where B will go
+      // in a row decomposition, each tile width is the same as the mesh width
+      // the mesh is decomposed along height
+      xtiles = 1;
+
+      //  set up the y coords of the tile boundaries
+      ytiles = as->nranks/2;
+      int ylocs[ytiles+1];
+      int ysize = 2*as->global_mesh_size[1] / as->nranks; // size of each tile in y
+
+      int yval=0;
+      for (int i=0; i<ytiles; i++, yval+=ysize) {
+         ylocs[i] = yval;
+      }
+      ylocs[ytiles] = as->global_mesh_size[1];
+
+      // then, create tiles along the y axis
+      int rank=0;
+      for (int i=0; i<ytiles; i++)
+      {
+         vector < Tile2D > tiles;
+         int width =  as->global_mesh_size[0];
+         int height = ylocs[i+1]-ylocs[i];
+         Tile2D t = Tile2D(0, ylocs[i], width, height, rank+extendBy);
+         rank+=2;
+         tiles.push_back(t);
+         tileArray->push_back(tiles);
+      }
+   }
+   if (as->decomp == COLUMN_DECOMP) { // this is where A will go
+      // in a columne decomposition, each tile height is the same as the mesh height
+      // the mesh is decomposed along width
+      ytiles = 1;
+
+      // set up the x coords of the tile boundaries
+      xtiles = as->nranks/2; 
+      int xlocs[xtiles+1];
+      int xsize = 2 * as->global_mesh_size[0] / as->nranks; // size of each tile in x
+
+      int xval=0;
+      for (int i=0; i<xtiles; i++, xval+=xsize) {
+         xlocs[i] = xval;
+      }
+      xlocs[xtiles] = as->global_mesh_size[0];
+
+      // then, create tiles along the x axis
+      vector < Tile2D > tile_row;
+      for (int i=0; i<xtiles; i++)
+      {
+         int width =  xlocs[i+1]-xlocs[i];
+         int height = as->global_mesh_size[1];
+         Tile2D t = Tile2D(xlocs[i], 0, width, height, i+extendBy);
+         tile_row.push_back(t);
+      }
+      tileArray->push_back(tile_row);
    }
 }
 
@@ -327,7 +390,7 @@ sobelAllTiles(int myrank, vector < vector < Tile2D > > & tileArray) {
 }
 
 void
-scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, int global_width, int global_height, int &numMessage, double &messageSize)
+scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, int global_width, int global_height)
 {
 
 #if DEBUG_TRACE
@@ -339,7 +402,7 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, 
       {  
          Tile2D *t = &(tileArray[row][col]);
 
-         if (myrank != 0 && t->tileRank == myrank)
+         if (myrank != 0 && myrank == t->tileRank)
          {
             int fromRank=0;
 
@@ -361,14 +424,11 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, 
 #if DEBUG_TRACE
                printf("scatterAllTiles() send side: t->tileRank=%d, myrank=%d, t->inputBuffer->size()=%d \n", t->tileRank, myrank, t->inputBuffer.size());
 #endif
-
                sendStridedBuffer(s, // ptr to the buffer to send
                      global_width, global_height,  // size of the src buffer
                      t->xloc, t->yloc, // offset into the send buffer
                      t->width, t->height,  // size of the buffer to send,
-                     myrank, t->tileRank);
-               numMessage++;
-               messageSize += t->width*t->height*sizeof(float);
+                     myrank, t->tileRank);   // from rank, to rank
             }
             else // rather then have rank 0 send to rank 0, just do a strided copy into a tile's input buffer
             {
@@ -491,11 +551,16 @@ int main(int ac, char *av[]) {
    vector < vector < Tile2D > > CtileArray;
    as.decomp = as.Adecomp;
    computeMeshDecomposition(&as, &AtileArray);
+   extendMeshDecomposition(&as, &AtileArray, 2);
    as.decomp = as.Bdecomp;
    computeMeshDecomposition(&as, &BtileArray);
+   extendMeshDecomposition(&as, &BtileArray, 1);
    as.decomp = as.Cdecomp;
    computeMeshDecomposition(&as, &CtileArray);
    
+   printf("Rank %d has %d tiles\n", as.myrank, AtileArray.size());
+   printf("Rank %d has %d tiles\n", as.myrank, BtileArray.size());
+   printf("Rank %d has %d tiles\n", as.myrank, CtileArray.size());
    if (as.myrank == 0 && as.debug==1) // print out the AppState and tileArray
    {
       as.print();
@@ -527,7 +592,11 @@ int main(int ac, char *av[]) {
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
 
-      //scatterAllTiles(as.myrank, tileArray, as.input_data_floats.data(), as.global_mesh_size[0], as.global_mesh_size[1], numMessage, messageSize);
+
+
+      //scatterAllTiles(as.myrank, AtileArray, as.A.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
+      //scatterAllTiles(as.myrank, BtileArray, as.B.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
+      //scatterAllTiles(as.myrank, CtileArray, as.C.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
 
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
