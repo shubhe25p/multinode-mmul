@@ -306,7 +306,7 @@ recvStridedBuffer(float *dstBuf,
 }
 
 void
-sobelAllTiles(int myrank, vector < vector < Tile2D > > & tileArray) {
+mmulAllTiles(int myrank, vector < vector < Tile2D > > & tileArray) {
    for (int row=0;row<tileArray.size(); row++)
    {
       for (int col=0; col<tileArray[row].size(); col++)
@@ -327,6 +327,8 @@ sobelAllTiles(int myrank, vector < vector < Tile2D > > & tileArray) {
          // ADD YOUR CODE HERE
          // to call your sobel filtering code on each tile
          // do_sobel_filtering(t->inputBuffer.data(), t->outputBuffer.data(), t->width, t->height);
+         printf("Rank %d is doing mmul on C tile %d\n", myrank, t->tileRank);
+         printf("Size of A is %d B is %d and C is %d\n", t->A.size(), t->B.size(), t->C.size());
          }
       }
    }
@@ -558,7 +560,7 @@ int main(int ac, char *av[]) {
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
 
-      //sobelAllTiles(as.myrank, tileArray);
+      mmulAllTiles(as.myrank, CtileArray);
 
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
