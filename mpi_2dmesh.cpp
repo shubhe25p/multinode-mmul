@@ -305,30 +305,26 @@ recvStridedBuffer(float *dstBuf,
 
 }
 
+
+
+
 void
-mmulAllTiles(int myrank, vector < vector < Tile2D > > & tileArray) {
-   for (int row=0;row<tileArray.size(); row++)
+mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vector < Tile2D > > & BtileArray, vector < vector < Tile2D > > & CtileArray) {
+   for (int row=0;row<CtileArray.size(); row++)
    {
-      for (int col=0; col<tileArray[row].size(); col++)
+      for (int col=0; col<CtileArray[row].size(); col++)
       {  
-         Tile2D *t = &(tileArray[row][col]);
-
-         if (t->tileRank == myrank)
+         Tile2D *Ct = &(CtileArray[row][col]);
+         for(int k=0;k<BtileArray.size();k++)
          {
-#if 0
-            // debug code
-            // v1: fill the output buffer with the value of myrank
-            //            printf(" sobelAllTiles(): filling the output buffer of size=%d with myrank=%d\n:", t->outputBuffer.size(), myrank);
-            //std::fill(t->outputBuffer.begin(), t->outputBuffer.end(), myrank);
-
-            // v2. copy the input to the output, umodified
-         //   std::copy(t->inputBuffer.begin(), t->inputBuffer.end(), t->outputBuffer.begin());
-#endif
-         // ADD YOUR CODE HERE
-         // to call your sobel filtering code on each tile
-         // do_sobel_filtering(t->inputBuffer.data(), t->outputBuffer.data(), t->width, t->height);
-         printf("Rank %d is doing mmul on C tile %d\n", myrank, t->tileRank);
-         printf("Size of A is %d B is %d and C is %d\n", t->A.size(), t->B.size(), t->C.size());
+            Tile2D *Bt = &(BtileArray[k][0]);
+            for(int p=0;p<AtileArray[0].size();p++)
+            {
+               Tile2D *At = &(AtileArray[0][p]);
+               if(At->tileRank==Ct->tileRank && Bt->tileRank==Ct->tileRank && Ct->tileRank==myrank){
+                  printf("Size of A is %d B is %d and C is %d\n", At->A.size(), Bt->B.size(), Ct->C.size());
+               }
+            }
          }
       }
    }
@@ -399,6 +395,18 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, 
                {
                   memcpy((void *)(d+d_offset), (void *)(s+s_offset), sizeof(float)*t->width);
                }
+                if(type==0){
+               t->A.resize(t->width*t->height);
+               memcpy((void *)(t->A.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
+            }
+            else if(type==1){
+               t->B.resize(t->width*t->height);
+               memcpy((void *)(t->B.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
+            }
+            else{
+               t->C.resize(t->width*t->height);
+               memcpy((void *)(t->C.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
+            }
             }
          }
       }
@@ -560,7 +568,7 @@ int main(int ac, char *av[]) {
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
 
-      mmulAllTiles(as.myrank, CtileArray);
+      mmulAllTiles(as.myrank, AtileArray, BtileArray, CtileArray);
 
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
