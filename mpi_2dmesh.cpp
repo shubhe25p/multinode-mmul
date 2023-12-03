@@ -362,7 +362,7 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, 
                   fromRank, myrank); 
             t->A.resize(t->width*t->height);
             if(type==0)
-               memcpy((void *)(t->A.data()), (void *)(t->inputBuffer[0]), sizeof(float)*t->width*t->height);
+               memcpy((void *)(t->A.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
             // else if(type==1)
             //    memcpy((void *)(t->B.data()), (void *)(t->inputBuffer[0]), sizeof(float)*t->width*t->height);
             // else
