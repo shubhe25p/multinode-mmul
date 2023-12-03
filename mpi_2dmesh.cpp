@@ -162,7 +162,6 @@ computeMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray) 
             int width =  as->global_mesh_size[0];
             int height = ylocs[i+1]-ylocs[i];
             Tile2D t = Tile2D(0, ylocs[i], width, height, rank);
-            t.print(0, ylocs[i]);
             rank += ytiles;
             tiles.push_back(t);
             tileArray->push_back(tiles);
@@ -194,7 +193,6 @@ computeMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray) 
          int width =  xlocs[i+1]-xlocs[i];
          int height = as->global_mesh_size[1];
          Tile2D t = Tile2D(xlocs[i], 0, width, height, rank);
-         t.print(xlocs[i], 0);
          rank++;
          tile_row.push_back(t);
       }
@@ -364,15 +362,13 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, 
                   fromRank, myrank); 
             t->A.resize(t->width*t->height);
             if(type==0)
-               memcpy((void *)(t->A), (void *)(t->inputBuffer), sizeof(float)*t->width*t->height);
-            else if(type==1)
-               memcpy((void *)(t->B), (void *)(t->inputBuffer), sizeof(float)*t->width*t->height);
-            else
-               memcpy((void *)(t->C), (void *)(t->inputBuffer), sizeof(float)*t->width*t->height);
+               memcpy((void *)(t->A.data()), (void *)(t->inputBuffer[0]), sizeof(float)*t->width*t->height);
+            // else if(type==1)
+            //    memcpy((void *)(t->B.data()), (void *)(t->inputBuffer[0]), sizeof(float)*t->width*t->height);
+            // else
+            //    memcpy((void *)(t->C.data()), (void *)(t->inputBuffer[0]), sizeof(float)*t->width*t->height);
             
-            printf("First element is %f\n", t->A[0]);
-
-            
+            printf("First element is %f and second element %f\n", t->A[0], t->A[1]);
             
          }
          else if (myrank == 0)
@@ -504,7 +500,6 @@ int main(int ac, char *av[]) {
    if (as.myrank == 0)
       printf("\n\n ----- All ranks will computeMeshDecomposition \n");
 #endif
-   if(as.myrank==0){
    vector < vector < Tile2D > > AtileArray;
    vector < vector < Tile2D > > BtileArray;
    vector < vector < Tile2D > > CtileArray;
@@ -514,7 +509,6 @@ int main(int ac, char *av[]) {
    computeMeshDecomposition(&as, &BtileArray);
    as.decomp = as.Cdecomp;
    computeMeshDecomposition(&as, &CtileArray);
-   }
    if (as.myrank == 0 && as.debug==1) // print out the AppState and tileArray
    {
       as.print();
