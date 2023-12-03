@@ -100,6 +100,10 @@ class Tile2D
    vector <float> inputBuffer;
    vector <float> outputBuffer;
 
+   vector <float> A;
+   vector <float> B;
+   vector <float> C;
+
    // the constructor takes args that set the tile size and location in the overall mesh
    Tile2D(int tx, int ty, int xsize, int ysize, int rank)
    {
@@ -112,6 +116,9 @@ class Tile2D
 
       inputBuffer.resize(0); // start with empty tiles
       outputBuffer.resize(0);
+      A.resize(0);
+      B.resize(0);
+      C.resize(0);
 
       // printf("Creating a Tile2D at (%d, %d) of size (%d, %d) for rank %d \n", xloc, yloc, width, height, tileRank);
    }

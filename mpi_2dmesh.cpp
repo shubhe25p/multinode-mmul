@@ -335,7 +335,7 @@ sobelAllTiles(int myrank, vector < vector < Tile2D > > & tileArray) {
 }
 
 void
-scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, int global_width, int global_height)
+scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, int global_width, int global_height, int type)
 {
 
 #if DEBUG_TRACE
@@ -357,11 +357,23 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, 
 #if DEBUG_TRACE
             printf("scatterAllTiles() receive side:: t->tileRank=%d, myrank=%d, t->inputBuffer->size()=%d, t->outputBuffersize()=%d \n", t->tileRank, myrank, t->inputBuffer.size(), t->outputBuffer.size());
 #endif
-
+            printf("scatterAllTiles() receive side:: t->tileRank=%d, myrank=%d, t->inputBuffer->size()=%d, t->outputBuffersize()=%d t->A=%d \n", t->tileRank, myrank, t->inputBuffer.size(), t->outputBuffer.size(), t->A.size());
             recvStridedBuffer(t->inputBuffer.data(), t->width, t->height,
                   0, 0,  // offset into the tile buffer: we want the whole thing
                   t->width, t->height, // how much data coming from this tile
                   fromRank, myrank); 
+            t->A.resize(t->width*t->height);
+            if(type==0)
+               memcpy((void *)(t->A), (void *)(t->inputBuffer), sizeof(float)*t->width*t->height);
+            else if(type==1)
+               memcpy((void *)(t->B), (void *)(t->inputBuffer), sizeof(float)*t->width*t->height);
+            else
+               memcpy((void *)(t->C), (void *)(t->inputBuffer), sizeof(float)*t->width*t->height);
+            
+            printf("First element is %f\n", t->A[0]);
+
+            
+            
          }
          else if (myrank == 0)
          {
@@ -369,6 +381,7 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, 
 #if DEBUG_TRACE
                printf("scatterAllTiles() send side: t->tileRank=%d, myrank=%d, t->inputBuffer->size()=%d \n", t->tileRank, myrank, t->inputBuffer.size());
 #endif
+               printf("scatterAllTiles() send side: t->tileRank=%d, myrank=%d, t->inputBuffer->size()=%d t->xloc=%d t->yloc=%d \n", t->tileRank, myrank, t->inputBuffer.size(), t->xloc, t->yloc);
                sendStridedBuffer(s, // ptr to the buffer to send
                      global_width, global_height,  // size of the src buffer
                      t->xloc, t->yloc, // offset into the send buffer
@@ -491,6 +504,7 @@ int main(int ac, char *av[]) {
    if (as.myrank == 0)
       printf("\n\n ----- All ranks will computeMeshDecomposition \n");
 #endif
+   if(as.myrank==0){
    vector < vector < Tile2D > > AtileArray;
    vector < vector < Tile2D > > BtileArray;
    vector < vector < Tile2D > > CtileArray;
@@ -500,10 +514,7 @@ int main(int ac, char *av[]) {
    computeMeshDecomposition(&as, &BtileArray);
    as.decomp = as.Cdecomp;
    computeMeshDecomposition(&as, &CtileArray);
-   
-   printf("Rank %d has %d tiles\n", as.myrank, AtileArray.size());
-   printf("Rank %d has %d tiles\n", as.myrank, BtileArray.size());
-   printf("Rank %d has %d tiles\n", as.myrank, CtileArray.size());
+   }
    if (as.myrank == 0 && as.debug==1) // print out the AppState and tileArray
    {
       as.print();
@@ -537,7 +548,7 @@ int main(int ac, char *av[]) {
 
 
 
-      //scatterAllTiles(as.myrank, AtileArray, as.A.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
+      scatterAllTiles(as.myrank, AtileArray, as.A.data(), as.global_mesh_size[0], as.global_mesh_size[1], 0);
       //scatterAllTiles(as.myrank, BtileArray, as.B.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
       //scatterAllTiles(as.myrank, CtileArray, as.C.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
 
