@@ -371,7 +371,6 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, 
                t->C.resize(t->width*t->height);
                memcpy((void *)(t->C.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
             }
-            printf("A first element is %f B first element is %f C first element is %f\n", t->A[0], t->B[0], t->C[0]);            
          }
          else if (myrank == 0)
          {
