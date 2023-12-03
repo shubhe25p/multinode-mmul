@@ -355,21 +355,23 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, 
 #if DEBUG_TRACE
             printf("scatterAllTiles() receive side:: t->tileRank=%d, myrank=%d, t->inputBuffer->size()=%d, t->outputBuffersize()=%d \n", t->tileRank, myrank, t->inputBuffer.size(), t->outputBuffer.size());
 #endif
-            printf("scatterAllTiles() receive side:: t->tileRank=%d, myrank=%d, t->inputBuffer->size()=%d, t->outputBuffersize()=%d t->A=%d \n", t->tileRank, myrank, t->inputBuffer.size(), t->outputBuffer.size(), t->A.size());
             recvStridedBuffer(t->inputBuffer.data(), t->width, t->height,
                   0, 0,  // offset into the tile buffer: we want the whole thing
                   t->width, t->height, // how much data coming from this tile
                   fromRank, myrank); 
-            t->A.resize(t->width*t->height);
-            if(type==0)
+            if(type==0){
+               t->A.resize(t->width*t->height);
                memcpy((void *)(t->A.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
-            // else if(type==1)
-            //    memcpy((void *)(t->B.data()), (void *)(t->inputBuffer[0]), sizeof(float)*t->width*t->height);
-            // else
-            //    memcpy((void *)(t->C.data()), (void *)(t->inputBuffer[0]), sizeof(float)*t->width*t->height);
-            
-            printf("First element is %f and second element %f\n", t->A[0], t->A[1]);
-            
+            }
+            else if(type==1){
+               t->B.resize(t->width*t->height);
+               memcpy((void *)(t->B.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
+            }
+            else{
+               t->C.resize(t->width*t->height);
+               memcpy((void *)(t->C.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
+            }
+            printf("A first element is %f B first element is %f C first element is %f\n", t->A[0], t->B[0], t->C[0]);            
          }
          else if (myrank == 0)
          {
@@ -543,8 +545,8 @@ int main(int ac, char *av[]) {
 
 
       scatterAllTiles(as.myrank, AtileArray, as.A.data(), as.global_mesh_size[0], as.global_mesh_size[1], 0);
-      //scatterAllTiles(as.myrank, BtileArray, as.B.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
-      //scatterAllTiles(as.myrank, CtileArray, as.C.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
+      scatterAllTiles(as.myrank, BtileArray, as.B.data(), as.global_mesh_size[0], as.global_mesh_size[1], 1);
+      scatterAllTiles(as.myrank, CtileArray, as.C.data(), as.global_mesh_size[0], as.global_mesh_size[1], 2);
 
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
