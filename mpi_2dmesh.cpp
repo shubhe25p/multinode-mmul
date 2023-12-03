@@ -154,16 +154,19 @@ computeMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray) 
       ylocs[ytiles] = as->global_mesh_size[1];
 
       // then, create tiles along the y axis
-      int rank=0;
-      for (int i=0; i<ytiles; i++)
-      {
-         vector < Tile2D > tiles;
-         int width =  as->global_mesh_size[0];
-         int height = ylocs[i+1]-ylocs[i];
-         Tile2D t = Tile2D(0, ylocs[i], width, height, rank);
-         rank+=2;
-         tiles.push_back(t);
-         tileArray->push_back(tiles);
+      for(int j = 0; j < ytiles; j++){
+         int rank = j;
+         for (int i=0; i<ytiles; i++)
+         {
+            vector < Tile2D > tiles;
+            int width =  as->global_mesh_size[0];
+            int height = ylocs[i+1]-ylocs[i];
+            Tile2D t = Tile2D(0, ylocs[i], width, height, rank);
+            t.print();
+            rank += ytiles;
+            tiles.push_back(t);
+            tileArray->push_back(tiles);
+         }
       }
    }
    else if (as->decomp == COLUMN_DECOMP) { // this is where A will go
@@ -184,12 +187,17 @@ computeMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray) 
 
       // then, create tiles along the x axis
       vector < Tile2D > tile_row;
+      int rank = 0;
+      for(int j=0;j<xtiles;j++){
       for (int i=0; i<xtiles; i++)
       {
          int width =  xlocs[i+1]-xlocs[i];
          int height = as->global_mesh_size[1];
-         Tile2D t = Tile2D(xlocs[i], 0, width, height, i);
+         Tile2D t = Tile2D(xlocs[i], 0, width, height, rank);
+         t.print();
+         rank++;
          tile_row.push_back(t);
+      }
       }
       tileArray->push_back(tile_row);
    }
@@ -237,69 +245,6 @@ computeMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray) 
          }
          tileArray->push_back(tile_row);
       }
-   }
-}
-
-void
-extendMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray, int extendBy) {
-   int xtiles, ytiles;
-   int ntiles;
-
-   if (as->decomp == ROW_DECOMP) { // this is where B will go
-      // in a row decomposition, each tile width is the same as the mesh width
-      // the mesh is decomposed along height
-      xtiles = 1;
-
-      //  set up the y coords of the tile boundaries
-      ytiles = as->nranks/2;
-      int ylocs[ytiles+1];
-      int ysize = 2*as->global_mesh_size[1] / as->nranks; // size of each tile in y
-
-      int yval=0;
-      for (int i=0; i<ytiles; i++, yval+=ysize) {
-         ylocs[i] = yval;
-      }
-      ylocs[ytiles] = as->global_mesh_size[1];
-
-      // then, create tiles along the y axis
-      int rank=0;
-      for (int i=0; i<ytiles; i++)
-      {
-         vector < Tile2D > tiles;
-         int width =  as->global_mesh_size[0];
-         int height = ylocs[i+1]-ylocs[i];
-         Tile2D t = Tile2D(0, ylocs[i], width, height, rank+extendBy);
-         rank+=2;
-         tiles.push_back(t);
-         tileArray->push_back(tiles);
-      }
-   }
-   if (as->decomp == COLUMN_DECOMP) { // this is where A will go
-      // in a columne decomposition, each tile height is the same as the mesh height
-      // the mesh is decomposed along width
-      ytiles = 1;
-
-      // set up the x coords of the tile boundaries
-      xtiles = as->nranks/2; 
-      int xlocs[xtiles+1];
-      int xsize = 2 * as->global_mesh_size[0] / as->nranks; // size of each tile in x
-
-      int xval=0;
-      for (int i=0; i<xtiles; i++, xval+=xsize) {
-         xlocs[i] = xval;
-      }
-      xlocs[xtiles] = as->global_mesh_size[0];
-
-      // then, create tiles along the x axis
-      vector < Tile2D > tile_row;
-      for (int i=0; i<xtiles; i++)
-      {
-         int width =  xlocs[i+1]-xlocs[i];
-         int height = as->global_mesh_size[1];
-         Tile2D t = Tile2D(xlocs[i], 0, width, height, i+extendBy);
-         tile_row.push_back(t);
-      }
-      tileArray->push_back(tile_row);
    }
 }
 
@@ -551,10 +496,8 @@ int main(int ac, char *av[]) {
    vector < vector < Tile2D > > CtileArray;
    as.decomp = as.Adecomp;
    computeMeshDecomposition(&as, &AtileArray);
-   extendMeshDecomposition(&as, &AtileArray, 2);
    as.decomp = as.Bdecomp;
    computeMeshDecomposition(&as, &BtileArray);
-   extendMeshDecomposition(&as, &BtileArray, 1);
    as.decomp = as.Cdecomp;
    computeMeshDecomposition(&as, &CtileArray);
    
