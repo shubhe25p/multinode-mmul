@@ -487,9 +487,9 @@ gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *d, i
    } // loop over 2D array of tiles
 }
 
-bool check_accuracy(double *A, double *Anot, int nvalues)
+bool check_accuracy(float *A, float *Anot, int nvalues)
 {
-  double eps = 1e-5;
+  float eps = 1e-5;
   for (size_t i = 0; i < nvalues; i++) 
   {
     if (fabsf(A[i] - Anot[i]) > eps) {
