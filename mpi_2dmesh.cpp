@@ -431,18 +431,21 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *s,
                   printArray(t->inputBuffer.data(), t->width, t->height);
                t->A.resize(t->width*t->height);
                memcpy((void *)(t->A.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
+               printArray(t->A.data(), t->width, t->height);
             }
             else if(type==1){
                printf("B width %d height %d \n", t->width, t->height);
                printArray(t->inputBuffer.data(), t->width, t->height);
                t->B.resize(t->width*t->height);
                memcpy((void *)(t->B.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
+               printArray(t->B.data(), t->width, t->height);
             }
             else{
                printf("C width %d height %d \n", t->width, t->height);
                printArray(t->inputBuffer.data(), t->width, t->height);
                t->C.resize(t->width*t->height);
                memcpy((void *)(t->C.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
+               printArray(t->C.data(), t->width, t->height);
             }
             }
          }
