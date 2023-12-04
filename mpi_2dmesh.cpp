@@ -563,15 +563,7 @@ int main(int ac, char *av[]) {
          fill(as.A.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
          fill(as.B.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
          fill(as.C.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
-         std::vector<double> buf(3 * n * n);
-         double* Acopy = buf.data() + 0;
-         double* Bcopy = Acopy + n * n;
-         double* Ccopy = Bcopy + n * n;
 
-         // make copies of A, B, C for use in verification of results
-         memcpy((void *)Acopy, (const void *)as.A.data(), sizeof(float)*as.global_mesh_size[0]*as.global_mesh_size[1]);
-         memcpy((void *)Bcopy, (const void *)as.B.data(), sizeof(float)*as.global_mesh_size[0]*as.global_mesh_size[1]);
-         memcpy((void *)Ccopy, (const void *)as.C.data(), sizeof(float)*as.global_mesh_size[0]*as.global_mesh_size[1]);
       }
       MPI_Barrier(MPI_COMM_WORLD);
 
@@ -579,9 +571,7 @@ int main(int ac, char *av[]) {
 
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
-
-
-
+      
       scatterAllTiles(as.myrank, AtileArray, as.A.data(), as.global_mesh_size[0], as.global_mesh_size[1], 0);
       scatterAllTiles(as.myrank, BtileArray, as.B.data(), as.global_mesh_size[0], as.global_mesh_size[1], 1);
       scatterAllTiles(as.myrank, CtileArray, as.C.data(), as.global_mesh_size[0], as.global_mesh_size[1], 2);
@@ -635,8 +625,8 @@ int main(int ac, char *av[]) {
       printf("\tMmul time:\t%6.4f (ms) \n", elapsed_sobel_time*1000.0);
       printf("\tGather time:\t%6.4f (ms) \n", elapsed_gather_time*1000.0);
       int n=as.global_mesh_size[0];
-      cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1.0, Acopy, n, Bcopy, n, 1., Ccopy, n);
-      if (check_accuracy(Ccopy, as.output_data_floats, n*n) == false)
+      cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1.0, as.A.data(), n, as.B.data(), n, 1., as.C.data(), n);
+      if (check_accuracy(as.C.data(), as.output_data_floats, n*n) == false)
             printf(" Error: your answer is not the same as that computed by BLAS. \n");
    }
 
