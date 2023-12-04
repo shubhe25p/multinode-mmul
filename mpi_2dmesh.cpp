@@ -52,35 +52,10 @@ void fill(double* p, int n) {
     for (int i = 0; i < n; ++i)
         p[i] = i%14;
 }
-void printARectArray(double *A, int n)
-{
-   for (int i=0;i<2*n;i++)
-   {
-      for (int j=0;j<n;j++)
-      {
-         printf("%6.4f ", A[i*n+j]);
-      }
-      printf("\n");
-   }
-   printf("\n");
-}
 
-void printBRectArray(double *A, int n)
+void printArray(double *A, int n, int m)
 {
-   for (int i=0;i<n;i++)
-   {
-      for (int j=0;j<2*n;j++)
-      {
-         printf("%6.4f ", A[i*n+j]);
-      }
-      printf("\n");
-   }
-   printf("\n");
-}
-
-void printArray(double *A, int n)
-{
-   for (int i=0;i<n;i++)
+   for (int i=0;i<m;i++)
    {
       for (int j=0;j<n;j++)
       {
@@ -453,16 +428,19 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *s,
                }
                 if(type==0){
                   printf("A width %d height %d \n", t->width, t->height);
+                  printArray(t->inputBuffer.data(), t->width, t->height);
                t->A.resize(t->width*t->height);
                memcpy((void *)(t->A.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
             }
             else if(type==1){
                printf("B width %d height %d \n", t->width, t->height);
+               printArray(t->inputBuffer.data(), t->width, t->height);
                t->B.resize(t->width*t->height);
                memcpy((void *)(t->B.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
             }
             else{
                printf("C width %d height %d \n", t->width, t->height);
+               printArray(t->inputBuffer.data(), t->width, t->height);
                t->C.resize(t->width*t->height);
                memcpy((void *)(t->C.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
             }
