@@ -50,7 +50,7 @@ void fill(double* p, int n) {
     static std::default_random_engine gen(rd());
     static std::uniform_real_distribution<> dis(-1.0, 1.0);
     for (int i = 0; i < n; ++i)
-        p[i] = i%14;
+        p[i] = 2*dis(gen)-1;
 }
 
 void printArray(double *A, int n, int m)
@@ -517,7 +517,6 @@ int main(int ac, char *av[]) {
 
    AppState as;
    vector < vector < Tile2D > > tileArray;
-
    std::chrono::time_point<std::chrono::high_resolution_clock> start_time, end_time;
    std::chrono::duration<double> elapsed_scatter_time, elapsed_sobel_time, elapsed_gather_time;
 
@@ -577,6 +576,7 @@ int main(int ac, char *av[]) {
          fill(as.A.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
          fill(as.B.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
          fill(as.C.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
+         printf("Working on problem size N=%d \n", as.global_mesh_size[0]);
 
       }
       MPI_Barrier(MPI_COMM_WORLD);
@@ -644,6 +644,8 @@ int main(int ac, char *av[]) {
       //printArray(as.output_data_floats.data(), n);
       if (check_accuracy(as.C.data(), as.output_data_floats.data(), n*n) == false)
             printf(" Error: your answer is not the same as that computed by BLAS. \n");
+      else
+            printf(" Your answer is the same as that computed by BLAS. \n");
    }
 
    MPI_Finalize();
