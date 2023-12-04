@@ -321,18 +321,6 @@ recvStridedBuffer(double *dstBuf,
 
 void do_rect_dgemm(double *A, double *B, double *C, int A_width, int A_height, int B_width, int B_height, int C_width, int C_height)
 {
-   // for (int i = 0; i < n; i++)
-   // {
-   //    for (int j = 0; j < n; j++)
-   //    {
-   //       double dot = 0.0;
-   //       for (int k = 0; k < 2*n; k++)
-   //       {
-   //          dot += A[j + k * n] * B[i * n + k];
-   //       }
-   //       C[i * n + j] += dot;
-   //    }
-   // }
    for(int i=0;i<C_height;i++){
       for(int j=0;j<C_width;j++){
          double dot = 0.0;
@@ -345,9 +333,7 @@ void do_rect_dgemm(double *A, double *B, double *C, int A_width, int A_height, i
 }
 
 void
-mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vector < Tile2D > > & BtileArray, vector < vector < Tile2D > > & CtileArray, int n) {
-   if(myrank==0){
-      printf("mmulAllTiles() Node 0 \n");
+mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vector < Tile2D > > & BtileArray, vector < vector < Tile2D > > & CtileArray) {
    for (int row=0;row<CtileArray.size(); row++)
    {
       for (int col=0; col<CtileArray[row].size(); col++)
@@ -360,15 +346,17 @@ mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vec
             {
                Tile2D *At = &(AtileArray[0][p]);
                if(At->tileRank==Ct->tileRank && Bt->tileRank==Ct->tileRank && Ct->tileRank==myrank){
+                  do_rect_dgemm(At->A.data(), Bt->B.data(), Ct->C.data(), At->width, At->height, Bt->width, Bt->height, Ct->width, Ct->height);
+                  if(myrank==0){
+                     printf("mmulAllTiles() Node 0 \n");
                   printArray(At->A.data(), At->width, At->height);
                   printArray(Bt->B.data(), Bt->width, Bt->height);
-                  do_rect_dgemm(At->A.data(), Bt->B.data(), Ct->C.data(), At->width, At->height, Bt->width, Bt->height, Ct->width, Ct->height);
                   printArray(Ct->C.data(), Ct->width, Ct->height);
+                  }
                }
             }
          }
       }
-   }
    }
 }
 
@@ -438,26 +426,17 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *s,
                   memcpy((void *)(d+d_offset), (void *)(s+s_offset), sizeof(double)*t->width);
                }
                 if(type==0){
-                  printf("A width %d height %d \n", t->width, t->height);
-                  printArray(t->inputBuffer.data(), t->width, t->height);
                t->A.resize(t->width*t->height);
                memcpy((void *)(t->A.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
-               printArray(t->A.data(), t->width, t->height);
             }
             else if(type==1){
-               printf("B width %d height %d \n", t->width, t->height);
-               printArray(t->inputBuffer.data(), t->width, t->height);
                t->B.resize(t->width*t->height);
                memcpy((void *)(t->B.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
-               printArray(t->B.data(), t->width, t->height);
             }
             else{
-               printf("C width %d height %d \n", t->width, t->height);
-               printArray(t->inputBuffer.data(), t->width, t->height);
                t->C.resize(t->width*t->height);
                memcpy((void *)(t->C.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
-               printArray(t->C.data(), t->width, t->height);
-            }
+                           }
             }
          }
       }
@@ -622,7 +601,7 @@ int main(int ac, char *av[]) {
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
 
-      //mmulAllTiles(as.myrank, AtileArray, BtileArray, CtileArray, (int) as.global_mesh_size[0]/2);
+      mmulAllTiles(as.myrank, AtileArray, BtileArray, CtileArray);
 
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
@@ -644,7 +623,7 @@ int main(int ac, char *av[]) {
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
 
-      //gatherAllTiles(as.myrank, CtileArray, as.output_data_floats.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
+      gatherAllTiles(as.myrank, CtileArray, as.output_data_floats.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
 
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
