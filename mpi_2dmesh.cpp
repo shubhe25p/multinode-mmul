@@ -319,18 +319,27 @@ recvStridedBuffer(double *dstBuf,
 }
 
 
-void do_rect_dgemm(double *A, double *B, double *C, int n)
+void do_rect_dgemm(double *A, double *B, double *C, int A_width, int A_height, int B_width, int B_height, int C_width, int C_height)
 {
-   for (int i = 0; i < n; i++)
-   {
-      for (int j = 0; j < n; j++)
-      {
+   // for (int i = 0; i < n; i++)
+   // {
+   //    for (int j = 0; j < n; j++)
+   //    {
+   //       double dot = 0.0;
+   //       for (int k = 0; k < 2*n; k++)
+   //       {
+   //          dot += A[j + k * n] * B[i * n + k];
+   //       }
+   //       C[i * n + j] += dot;
+   //    }
+   // }
+   for(int i=0;i<C_height;i++){
+      for(int j=0;j<C_width;j++){
          double dot = 0.0;
-         for (int k = 0; k < 2*n; k++)
-         {
-            dot += A[j + k * n] * B[i * n + k];
+         for(int k=0;k<A_height;k++){
+            dot += A[k*A_width+j] * B[i*B_width+k];
          }
-         C[i * n + j] += dot;
+         C[i*C_width+j] += dot;
       }
    }
 }
@@ -351,8 +360,10 @@ mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vec
             {
                Tile2D *At = &(AtileArray[0][p]);
                if(At->tileRank==Ct->tileRank && Bt->tileRank==Ct->tileRank && Ct->tileRank==myrank){
-                  do_rect_dgemm(At->A.data(), Bt->B.data(), Ct->C.data(), n);
-                  printArray(Ct->C.data(), n, n);
+                  printArray(At->A.data(), At->width, At->height);
+                  printArray(Bt->B.data(), Bt->width, Bt->height);
+                  do_rect_dgemm(At->A.data(), Bt->B.data(), Ct->C.data(), At->width, At->height, Bt->width, Bt->height, Ct->width, Ct->height);
+                  printArray(Ct->C.data(), Ct->width, Ct->height);
                }
             }
          }
