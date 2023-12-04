@@ -50,7 +50,7 @@ void fill(double* p, int n) {
     static std::default_random_engine gen(rd());
     static std::uniform_real_distribution<> dis(-1.0, 1.0);
     for (int i = 0; i < n; ++i)
-        p[i] = 2*dis(gen)-1;
+        p[i] = i%8;
 }
 
 void printArray(double *A, int n, int m)
@@ -252,7 +252,6 @@ computeMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray) 
             width = xlocs[i+1]-xlocs[i];
             height = ylocs[j+1]-ylocs[j];
             Tile2D t = Tile2D(xlocs[i], ylocs[j], width, height, rank++);
-            t.print(xlocs[i], ylocs[j]);
             tile_row.push_back(t);
          }
          tileArray->push_back(tile_row);
@@ -356,7 +355,7 @@ mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vec
 }
 
 void
-scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *s, int global_width, int global_height, int type)
+scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *s, int global_width, int global_height, int jump, double *inputBuffer)
 {
 
 #if DEBUG_TRACE
@@ -373,27 +372,16 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *s,
             int fromRank=0;
 
             // receive a tile's buffer 
-            t->inputBuffer.resize(t->width*t->height);
-            t->outputBuffer.resize(t->width*t->height);
+            // t->inputBuffer.resize(t->width*t->height);
+            // t->outputBuffer.resize(t->width*t->height);
+            double *d = inputBuffer + (jump*t->width*t->height);
 #if DEBUG_TRACE
             printf("scatterAllTiles() receive side:: t->tileRank=%d, myrank=%d, t->inputBuffer->size()=%d, t->outputBuffersize()=%d \n", t->tileRank, myrank, t->inputBuffer.size(), t->outputBuffer.size());
 #endif
-            recvStridedBuffer(t->inputBuffer.data(), t->width, t->height,
+            recvStridedBuffer(d, t->width, t->height,
                   0, 0,  // offset into the tile buffer: we want the whole thing
                   t->width, t->height, // how much data coming from this tile
                   fromRank, myrank); 
-            if(type==0){
-               t->A.resize(t->width*t->height);
-               memcpy((void *)(t->A.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
-            }
-            else if(type==1){
-               t->B.resize(t->width*t->height);
-               memcpy((void *)(t->B.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
-            }
-            else{
-               t->C.resize(t->width*t->height);
-               memcpy((void *)(t->C.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
-            }
          }
          else if (myrank == 0)
          {
@@ -401,8 +389,7 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *s,
 #if DEBUG_TRACE
                printf("scatterAllTiles() send side: t->tileRank=%d, myrank=%d, t->inputBuffer->size()=%d \n", t->tileRank, myrank, t->inputBuffer.size());
 #endif
-               printf("scatterAllTiles() send side: t->tileRank=%d, myrank=%d, t->inputBuffer->size()=%d t->xloc=%d t->yloc=%d \n", t->tileRank, myrank, t->inputBuffer.size(), t->xloc, t->yloc);
-               sendStridedBuffer(s, // ptr to the buffer to send
+                 sendStridedBuffer(s, // ptr to the buffer to send
                      global_width, global_height,  // size of the src buffer
                      t->xloc, t->yloc, // offset into the send buffer
                      t->width, t->height,  // size of the buffer to send,
@@ -410,28 +397,16 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *s,
             }
             else // rather then have rank 0 send to rank 0, just do a strided copy into a tile's input buffer
             {
-               t->inputBuffer.resize(t->width*t->height);
-               t->outputBuffer.resize(t->width*t->height);
+               // t->inputBuffer.resize(t->width*t->height); // will resize everytime for A0, B0, C0
+               // t->outputBuffer.resize(t->width*t->height);
 
                off_t s_offset=0, d_offset=0;
-               double *d = t->inputBuffer.data();
+               double *d = inputBuffer + (jump*t->width*t->height);
 
                for (int j=0;j<t->height;j++, s_offset+=global_width, d_offset+=t->width)
                {
                   memcpy((void *)(d+d_offset), (void *)(s+s_offset), sizeof(double)*t->width);
                }
-                if(type==0){
-               t->A.resize(t->width*t->height);
-               memcpy((void *)(t->A.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
-            }
-            else if(type==1){
-               t->B.resize(t->width*t->height);
-               memcpy((void *)(t->B.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
-            }
-            else{
-               t->C.resize(t->width*t->height);
-               memcpy((void *)(t->C.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
-                           }
             }
          }
       }
@@ -580,11 +555,13 @@ int main(int ac, char *av[]) {
 
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
-      
-      //scatterAllTiles(as.myrank, AtileArray, as.A.data(), as.global_mesh_size[0], as.global_mesh_size[1], 0);
-      //scatterAllTiles(as.myrank, BtileArray, as.B.data(), as.global_mesh_size[0], as.global_mesh_size[1], 1);
-      //scatterAllTiles(as.myrank, CtileArray, as.C.data(), as.global_mesh_size[0], as.global_mesh_size[1], 2);
-
+      scatterAllTiles(as.myrank, CtileArray, as.C.data(), as.global_mesh_size[0], as.global_mesh_size[1], 0, as.inputBuffer.data());
+      scatterAllTiles(as.myrank, AtileArray, as.A.data(), as.global_mesh_size[0], as.global_mesh_size[1], 1, as.inputBuffer.data());
+      scatterAllTiles(as.myrank, BtileArray, as.B.data(), as.global_mesh_size[0], as.global_mesh_size[1], 2, as.inputBuffer.data());
+      if(as.myrank==0){
+         printArray(as.A.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
+         printArray(as.inputBuffer.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
+      }
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
       end_time = std::chrono::high_resolution_clock::now();
