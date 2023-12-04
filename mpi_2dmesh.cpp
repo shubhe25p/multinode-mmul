@@ -307,9 +307,8 @@ recvStridedBuffer(double *dstBuf,
 }
 
 
-void do_rect_dgemm(double *A, double *B, double *C)
+void do_rect_dgemm(double *A, double *B, double *C, int n)
 {
-   int n = 3500;
    for (int i = 0; i < n; i++)
    {
       for (int j = 0; j < n; j++)
@@ -325,7 +324,7 @@ void do_rect_dgemm(double *A, double *B, double *C)
 }
 
 void
-mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vector < Tile2D > > & BtileArray, vector < vector < Tile2D > > & CtileArray) {
+mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vector < Tile2D > > & BtileArray, vector < vector < Tile2D > > & CtileArray, int n) {
    for (int row=0;row<CtileArray.size(); row++)
    {
       for (int col=0; col<CtileArray[row].size(); col++)
@@ -338,7 +337,7 @@ mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vec
             {
                Tile2D *At = &(AtileArray[0][p]);
                if(At->tileRank==Ct->tileRank && Bt->tileRank==Ct->tileRank && Ct->tileRank==myrank){
-                  do_rect_dgemm(At->A.data(), Bt->B.data(), Ct->C.data());
+                  do_rect_dgemm(At->A.data(), Bt->B.data(), Ct->C.data(), n);
                }
             }
          }
@@ -587,7 +586,7 @@ int main(int ac, char *av[]) {
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
 
-      mmulAllTiles(as.myrank, AtileArray, BtileArray, CtileArray);
+      mmulAllTiles(as.myrank, AtileArray, BtileArray, CtileArray, (int) as.global_mesh_size[0]/2);
 
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
