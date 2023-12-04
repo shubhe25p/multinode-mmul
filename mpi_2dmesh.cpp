@@ -39,6 +39,7 @@
 #include <chrono>
 #include <random>
 #include <string.h>
+#include <cblas.h>
 
 #include "mpi_2dmesh.hpp"  // for AppState and Tile2D class
 
@@ -486,6 +487,18 @@ gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *d, i
    } // loop over 2D array of tiles
 }
 
+bool check_accuracy(double *A, double *Anot, int nvalues)
+{
+  double eps = 1e-5;
+  for (size_t i = 0; i < nvalues; i++) 
+  {
+    if (fabsf(A[i] - Anot[i]) > eps) {
+       return false;
+    }
+  }
+  return true;
+}
+
 int main(int ac, char *av[]) {
 
    AppState as;
@@ -550,6 +563,15 @@ int main(int ac, char *av[]) {
          fill(as.A.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
          fill(as.B.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
          fill(as.C.data(), as.global_mesh_size[0]*as.global_mesh_size[1]);
+         std::vector<double> buf(3 * n * n);
+         double* Acopy = buf.data() + 0;
+         double* Bcopy = Acopy + n * n;
+         double* Ccopy = Bcopy + n * n;
+
+         // make copies of A, B, C for use in verification of results
+         memcpy((void *)Acopy, (const void *)as.A.data(), sizeof(float)*as.global_mesh_size[0]*as.global_mesh_size[1]);
+         memcpy((void *)Bcopy, (const void *)as.B.data(), sizeof(float)*as.global_mesh_size[0]*as.global_mesh_size[1]);
+         memcpy((void *)Ccopy, (const void *)as.C.data(), sizeof(float)*as.global_mesh_size[0]*as.global_mesh_size[1]);
       }
       MPI_Barrier(MPI_COMM_WORLD);
 
@@ -612,6 +634,10 @@ int main(int ac, char *av[]) {
       printf("\tScatter time:\t%6.4f (ms) \n", elapsed_scatter_time*1000.0);
       printf("\tMmul time:\t%6.4f (ms) \n", elapsed_sobel_time*1000.0);
       printf("\tGather time:\t%6.4f (ms) \n", elapsed_gather_time*1000.0);
+      int n=as.global_mesh_size[0];
+      cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1.0, Acopy, n, Bcopy, n, 1., Ccopy, n);
+      if (check_accuracy(Ccopy, as.output_data_floats, n*n) == false)
+            printf(" Error: your answer is not the same as that computed by BLAS. \n");
    }
 
    MPI_Finalize();
