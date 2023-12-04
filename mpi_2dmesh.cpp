@@ -252,6 +252,7 @@ computeMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray) 
             width = xlocs[i+1]-xlocs[i];
             height = ylocs[j+1]-ylocs[j];
             Tile2D t = Tile2D(xlocs[i], ylocs[j], width, height, rank++);
+            t.print(xlocs[i], ylocs[j]);
             tile_row.push_back(t);
          }
          tileArray->push_back(tile_row);
@@ -541,9 +542,9 @@ int main(int ac, char *av[]) {
    vector < vector < Tile2D > > AtileArray;
    vector < vector < Tile2D > > BtileArray;
    vector < vector < Tile2D > > CtileArray;
-   as.decomp = as.Adecomp;
+   as.decomp = TILE_DECOMP;
    computeMeshDecomposition(&as, &AtileArray);
-   as.decomp = as.Bdecomp;
+   as.decomp = TILE_DECOMP;
    computeMeshDecomposition(&as, &BtileArray);
    as.decomp = as.Cdecomp;
    computeMeshDecomposition(&as, &CtileArray);
@@ -580,9 +581,9 @@ int main(int ac, char *av[]) {
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
       
-      scatterAllTiles(as.myrank, AtileArray, as.A.data(), as.global_mesh_size[0], as.global_mesh_size[1], 0);
-      scatterAllTiles(as.myrank, BtileArray, as.B.data(), as.global_mesh_size[0], as.global_mesh_size[1], 1);
-      scatterAllTiles(as.myrank, CtileArray, as.C.data(), as.global_mesh_size[0], as.global_mesh_size[1], 2);
+      //scatterAllTiles(as.myrank, AtileArray, as.A.data(), as.global_mesh_size[0], as.global_mesh_size[1], 0);
+      //scatterAllTiles(as.myrank, BtileArray, as.B.data(), as.global_mesh_size[0], as.global_mesh_size[1], 1);
+      //scatterAllTiles(as.myrank, CtileArray, as.C.data(), as.global_mesh_size[0], as.global_mesh_size[1], 2);
 
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
@@ -595,7 +596,7 @@ int main(int ac, char *av[]) {
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
 
-      mmulAllTiles(as.myrank, AtileArray, BtileArray, CtileArray);
+      //mmulAllTiles(as.myrank, AtileArray, BtileArray, CtileArray);
 
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
@@ -617,7 +618,7 @@ int main(int ac, char *av[]) {
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
 
-      gatherAllTiles(as.myrank, CtileArray, as.output_data_floats.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
+      //gatherAllTiles(as.myrank, CtileArray, as.output_data_floats.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
 
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
