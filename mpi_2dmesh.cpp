@@ -438,7 +438,7 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, 
 }
 
 void
-gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *d, int global_width, int global_height, int &numMessage, double &messageSize)
+gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *d, int global_width, int global_height)
 {
 
    for (int row=0;row<tileArray.size(); row++)
@@ -454,13 +454,11 @@ gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *d, i
          if (myrank != 0 && t->tileRank == myrank)
          {
             // send the tile's output buffer to rank 0
-            sendStridedBuffer(t->outputBuffer.data(), // ptr to the buffer to send
+            sendStridedBuffer(t->C.data(), // ptr to the buffer to send
                t->width, t->height,  // size of the src buffer
                0, 0, // offset into the send buffer
                t->width, t->height,  // size of the buffer to send,
                t->tileRank, 0);   // from rank, to rank
-            numMessage++;
-            messageSize += t->width*t->height*sizeof(float);
          }
          else if (myrank == 0)
          {
@@ -469,17 +467,11 @@ gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *d, i
                recvStridedBuffer(d, global_width, global_height,
                      t->xloc, t->yloc,  // offset of this tile
                      t->width, t->height, // how much data coming from this tile
-                     t->tileRank, myrank); 
-               if(t->tileRank==1){
-                  int count=0;
-                  printf("First element is %f\n", d[0]);
-                  printf("\n");
-                  printf("last element is %f\n", d[t->width-1]);
-               }
+                     t->tileRank, myrank);
             }
             else // copy from a tile owned by rank 0 back into the main buffer
             {
-               float *s = t->outputBuffer.data();
+               float *s = t->C.data();
                off_t s_offset=0, d_offset=0;
                d_offset = t->yloc * global_width + t->xloc;
 
@@ -605,7 +597,7 @@ int main(int ac, char *av[]) {
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
 
-      //gatherAllTiles(as.myrank, tileArray, as.output_data_floats.data(), as.global_mesh_size[0], as.global_mesh_size[1], numMessage, messageSize);
+      gatherAllTiles(as.myrank, CtileArray, as.output_data_floats.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
 
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
@@ -618,7 +610,7 @@ int main(int ac, char *av[]) {
    if (as.myrank == 0) {
       printf("\n\nTiming results from rank 0: \n");
       printf("\tScatter time:\t%6.4f (ms) \n", elapsed_scatter_time*1000.0);
-      printf("\tSobel time:\t%6.4f (ms) \n", elapsed_sobel_time*1000.0);
+      printf("\tMmul time:\t%6.4f (ms) \n", elapsed_sobel_time*1000.0);
       printf("\tGather time:\t%6.4f (ms) \n", elapsed_gather_time*1000.0);
    }
 
