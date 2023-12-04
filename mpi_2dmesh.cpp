@@ -50,9 +50,46 @@ void fill(double* p, int n) {
     static std::default_random_engine gen(rd());
     static std::uniform_real_distribution<> dis(-1.0, 1.0);
     for (int i = 0; i < n; ++i)
-        p[i] = 2 * dis(gen) - 1;
+        p[i] = i%14;
+}
+void printARectArray(double *A, int n)
+{
+   for (int i=0;i<2*n;i++)
+   {
+      for (int j=0;j<n;j++)
+      {
+         printf("%6.4f ", A[i*n+j]);
+      }
+      printf("\n");
+   }
+   printf("\n");
 }
 
+void printBRectArray(double *A, int n)
+{
+   for (int i=0;i<n;i++)
+   {
+      for (int j=0;j<2*n;j++)
+      {
+         printf("%6.4f ", A[i*n+j]);
+      }
+      printf("\n");
+   }
+   printf("\n");
+}
+
+void printArray(double *A, int n)
+{
+   for (int i=0;i<n;i++)
+   {
+      for (int j=0;j<n;j++)
+      {
+         printf("%6.4f ", A[i*n+j]);
+      }
+      printf("\n");
+   }
+   printf("\n");
+}
 int
 parseArgs(int ac, char *av[], AppState *as)
 {
@@ -502,44 +539,6 @@ bool check_accuracy(double *A, double *Anot, int nvalues)
   return true;
 }
 
-void printARectArray(double *A, int n,)
-{
-   for (int i=0;i<2*n;i++)
-   {
-      for (int j=0;j<n;j++)
-      {
-         printf("%6.4f ", A[i*n+j]);
-      }
-      printf("\n");
-   }
-   printf("\n");
-}
-
-void printBRectArray(double *A, int n)
-{
-   for (int i=0;i<n;i++)
-   {
-      for (int j=0;j<2*n;j++)
-      {
-         printf("%6.4f ", A[i*n+j]);
-      }
-      printf("\n");
-   }
-   printf("\n");
-}
-
-void printArray(double *A, int n)
-{
-   for (int i=0;i<n;i++)
-   {
-      for (int j=0;j<n;j++)
-      {
-         printf("%6.4f ", A[i*n+j]);
-      }
-      printf("\n");
-   }
-   printf("\n");
-}
 int main(int ac, char *av[]) {
 
    AppState as;

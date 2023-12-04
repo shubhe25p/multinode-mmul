@@ -10,7 +10,7 @@
 using namespace std;
 
 static char default_input_fname[] = "../data/zebra-gray-int8-4x";
-static int default_data_dims[2] = {32, 32};
+static int default_data_dims[2] = {8, 8};
 static char default_output_fname[] = "../data/processed-raw-int8-4x-cpu.dat";
 
 typedef enum {
