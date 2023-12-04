@@ -306,7 +306,22 @@ recvStridedBuffer(float *dstBuf,
 }
 
 
+void do_rect_dgemm(float *A, float *B, float *C)
+{
 
+   for (int i = 0; i < 3500; i++)
+   {
+      for (int j = 0; j < 3500; j++)
+      {
+         float dot = 0.0;
+         for (int k = 0; k < 7000; k++)
+         {
+            dot += A[j + k * n] * B[i * n + k];
+         }
+         C[i * n + j] += dot;
+      }
+   }
+}
 
 void
 mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vector < Tile2D > > & BtileArray, vector < vector < Tile2D > > & CtileArray) {
@@ -322,7 +337,7 @@ mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vec
             {
                Tile2D *At = &(AtileArray[0][p]);
                if(At->tileRank==Ct->tileRank && Bt->tileRank==Ct->tileRank && Ct->tileRank==myrank){
-                  printf("Size of A is %d B is %d and C is %d\n", At->A.size(), Bt->B.size(), Ct->C.size());
+                  do_rect_dgemm(At->A.data(), Bt->B.data(), Ct->C.data());
                }
             }
          }
