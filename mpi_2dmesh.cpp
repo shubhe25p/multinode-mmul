@@ -626,7 +626,7 @@ int main(int ac, char *av[]) {
       printf("\tGather time:\t%6.4f (ms) \n", elapsed_gather_time*1000.0);
       int n=as.global_mesh_size[0];
       cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1.0, as.A.data(), n, as.B.data(), n, 1., as.C.data(), n);
-      if (check_accuracy(as.C.data(), as.output_data_floats, n*n) == false)
+      if (check_accuracy(as.C.data(), as.output_data_floats.data(), n*n) == false)
             printf(" Error: your answer is not the same as that computed by BLAS. \n");
    }
 
