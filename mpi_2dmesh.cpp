@@ -308,13 +308,13 @@ recvStridedBuffer(float *dstBuf,
 
 void do_rect_dgemm(float *A, float *B, float *C)
 {
-
-   for (int i = 0; i < 3500; i++)
+   int n = 3500;
+   for (int i = 0; i < n; i++)
    {
-      for (int j = 0; j < 3500; j++)
+      for (int j = 0; j < n; j++)
       {
          float dot = 0.0;
-         for (int k = 0; k < 7000; k++)
+         for (int k = 0; k < 2*n; k++)
          {
             dot += A[j + k * n] * B[i * n + k];
          }
