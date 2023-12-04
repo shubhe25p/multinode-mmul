@@ -45,7 +45,7 @@
 
 #define DEBUG_TRACE 0 
 
-void fill(float* p, int n) {
+void fill(double* p, int n) {
     static std::random_device rd;
     static std::default_random_engine gen(rd());
     static std::uniform_real_distribution<> dis(-1.0, 1.0);
@@ -248,7 +248,7 @@ computeMeshDecomposition(AppState *as, vector < vector < Tile2D > > *tileArray) 
 }
 
 void
-sendStridedBuffer(float *srcBuf, 
+sendStridedBuffer(double *srcBuf, 
       int srcWidth, int srcHeight, 
       int srcOffsetColumn, int srcOffsetRow, 
       int sendWidth, int sendHeight, 
@@ -268,7 +268,7 @@ sendStridedBuffer(float *srcBuf,
    int subRegionSize[2] = {sendHeight, sendWidth};
 
    MPI_Datatype subRegionType;
-   MPI_Type_create_subarray(2, globalSize, subRegionSize, startOffset, MPI_ORDER_C, MPI_FLOAT, &subRegionType);
+   MPI_Type_create_subarray(2, globalSize, subRegionSize, startOffset, MPI_ORDER_C, MPI_DOUBLE, &subRegionType);
    MPI_Type_commit(&subRegionType);
    
    MPI_Send(srcBuf, 1, subRegionType, toRank, msgTag, MPI_COMM_WORLD);
@@ -276,7 +276,7 @@ sendStridedBuffer(float *srcBuf,
 }
 
 void
-recvStridedBuffer(float *dstBuf, 
+recvStridedBuffer(double *dstBuf, 
       int dstWidth, int dstHeight, 
       int dstOffsetColumn, int dstOffsetRow, 
       int expectedWidth, int expectedHeight, 
@@ -298,7 +298,7 @@ recvStridedBuffer(float *dstBuf,
    int subRegionSize[2] = {expectedHeight, expectedWidth};
 
    MPI_Datatype subRegionType;
-   MPI_Type_create_subarray(2, globalSize, subRegionSize, startOffset, MPI_ORDER_C, MPI_FLOAT, &subRegionType);
+   MPI_Type_create_subarray(2, globalSize, subRegionSize, startOffset, MPI_ORDER_C, MPI_DOUBLE, &subRegionType);
    MPI_Type_commit(&subRegionType);
    
    MPI_Recv(dstBuf, 1, subRegionType, fromRank, msgTag, MPI_COMM_WORLD, &stat);
@@ -307,14 +307,14 @@ recvStridedBuffer(float *dstBuf,
 }
 
 
-void do_rect_dgemm(float *A, float *B, float *C)
+void do_rect_dgemm(double *A, double *B, double *C)
 {
    int n = 3500;
    for (int i = 0; i < n; i++)
    {
       for (int j = 0; j < n; j++)
       {
-         float dot = 0.0;
+         double dot = 0.0;
          for (int k = 0; k < 2*n; k++)
          {
             dot += A[j + k * n] * B[i * n + k];
@@ -347,7 +347,7 @@ mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vec
 }
 
 void
-scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, int global_width, int global_height, int type)
+scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *s, int global_width, int global_height, int type)
 {
 
 #if DEBUG_TRACE
@@ -375,15 +375,15 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, 
                   fromRank, myrank); 
             if(type==0){
                t->A.resize(t->width*t->height);
-               memcpy((void *)(t->A.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
+               memcpy((void *)(t->A.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
             }
             else if(type==1){
                t->B.resize(t->width*t->height);
-               memcpy((void *)(t->B.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
+               memcpy((void *)(t->B.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
             }
             else{
                t->C.resize(t->width*t->height);
-               memcpy((void *)(t->C.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
+               memcpy((void *)(t->C.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
             }
          }
          else if (myrank == 0)
@@ -405,23 +405,23 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, 
                t->outputBuffer.resize(t->width*t->height);
 
                off_t s_offset=0, d_offset=0;
-               float *d = t->inputBuffer.data();
+               double *d = t->inputBuffer.data();
 
                for (int j=0;j<t->height;j++, s_offset+=global_width, d_offset+=t->width)
                {
-                  memcpy((void *)(d+d_offset), (void *)(s+s_offset), sizeof(float)*t->width);
+                  memcpy((void *)(d+d_offset), (void *)(s+s_offset), sizeof(double)*t->width);
                }
                 if(type==0){
                t->A.resize(t->width*t->height);
-               memcpy((void *)(t->A.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
+               memcpy((void *)(t->A.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
             }
             else if(type==1){
                t->B.resize(t->width*t->height);
-               memcpy((void *)(t->B.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
+               memcpy((void *)(t->B.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
             }
             else{
                t->C.resize(t->width*t->height);
-               memcpy((void *)(t->C.data()), (void *)(t->inputBuffer.data()), sizeof(float)*t->width*t->height);
+               memcpy((void *)(t->C.data()), (void *)(t->inputBuffer.data()), sizeof(double)*t->width*t->height);
             }
             }
          }
@@ -439,7 +439,7 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *s, 
 }
 
 void
-gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *d, int global_width, int global_height)
+gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *d, int global_width, int global_height)
 {
 
    for (int row=0;row<tileArray.size(); row++)
@@ -472,13 +472,13 @@ gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *d, i
             }
             else // copy from a tile owned by rank 0 back into the main buffer
             {
-               float *s = t->C.data();
+               double *s = t->C.data();
                off_t s_offset=0, d_offset=0;
                d_offset = t->yloc * global_width + t->xloc;
 
                for (int j=0;j<t->height;j++, s_offset+=t->width, d_offset+=global_width)
                {
-                  memcpy((void *)(d+d_offset), (void *)(s+s_offset), sizeof(float)*t->width);
+                  memcpy((void *)(d+d_offset), (void *)(s+s_offset), sizeof(double)*t->width);
                }
             }
          }
@@ -487,9 +487,9 @@ gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, float *d, i
    } // loop over 2D array of tiles
 }
 
-bool check_accuracy(float *A, float *Anot, int nvalues)
+bool check_accuracy(double *A, double *Anot, int nvalues)
 {
-  float eps = 1e-5;
+  double eps = 1e-5;
   for (size_t i = 0; i < nvalues; i++) 
   {
     if (fabsf(A[i] - Anot[i]) > eps) {

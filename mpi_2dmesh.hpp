@@ -40,13 +40,13 @@ class AppState
    int global_mesh_size[2]; // assumes 2D mesh
 
    // used by rank 0 to hold the float-converted input data
-   vector<float> input_data_floats;
+   vector<double> input_data_floats;
    // used to hold the results of the computation
-   vector<float> output_data_floats;
+   vector<double> output_data_floats;
 
-   vector<float> A;
-   vector<float> B;
-   vector<float> C;
+   vector<double> A;
+   vector<double> B;
+   vector<double> C;
 
    int Adecomp;
    int Bdecomp;
@@ -97,12 +97,12 @@ class Tile2D
 
    int tileRank;      // rank id owner of this tile
 
-   vector <float> inputBuffer;
-   vector <float> outputBuffer;
+   vector <double> inputBuffer;
+   vector <double> outputBuffer;
 
-   vector <float> A;
-   vector <float> B;
-   vector <float> C;
+   vector <double> A;
+   vector <double> B;
+   vector <double> C;
 
    // the constructor takes args that set the tile size and location in the overall mesh
    Tile2D(int tx, int ty, int xsize, int ysize, int rank)
