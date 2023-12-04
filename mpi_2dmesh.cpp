@@ -350,10 +350,6 @@ mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vec
                Tile2D *At = &(AtileArray[0][p]);
                if(At->tileRank==Ct->tileRank && Bt->tileRank==Ct->tileRank && Ct->tileRank==myrank){
                   do_rect_dgemm(At->A.data(), Bt->B.data(), Ct->C.data(), n);
-                  if(myrank==0)
-                     printARectArray(At->A.data(), n);
-                     printBRectArray(Bt->B.data(), n);
-                     printArray(Ct->C.data(), n);
                }
             }
          }
