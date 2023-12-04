@@ -338,6 +338,10 @@ mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vec
                Tile2D *At = &(AtileArray[0][p]);
                if(At->tileRank==Ct->tileRank && Bt->tileRank==Ct->tileRank && Ct->tileRank==myrank){
                   do_rect_dgemm(At->A.data(), Bt->B.data(), Ct->C.data(), n);
+                  if(myrank==0)
+                     printARectArray(At->A.data(), n);
+                     printBRectArray(Bt->B.data(), n);
+                     printArray(Ct->C.data(), n);
                }
             }
          }
@@ -498,6 +502,32 @@ bool check_accuracy(double *A, double *Anot, int nvalues)
   return true;
 }
 
+void printARectArray(double *A, int n,)
+{
+   for (int i=0;i<2*n;i++)
+   {
+      for (int j=0;j<n;j++)
+      {
+         printf("%6.4f ", A[i*n+j]);
+      }
+      printf("\n");
+   }
+   printf("\n");
+}
+
+void printBRectArray(double *A, int n)
+{
+   for (int i=0;i<n;i++)
+   {
+      for (int j=0;j<2*n;j++)
+      {
+         printf("%6.4f ", A[i*n+j]);
+      }
+      printf("\n");
+   }
+   printf("\n");
+}
+
 void printArray(double *A, int n)
 {
    for (int i=0;i<n;i++)
@@ -636,7 +666,6 @@ int main(int ac, char *av[]) {
       printf("\tMmul time:\t%6.4f (ms) \n", elapsed_sobel_time*1000.0);
       printf("\tGather time:\t%6.4f (ms) \n", elapsed_gather_time*1000.0);
       int n=as.global_mesh_size[0];
-      printArray(as.C.data(), n);
       cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1.0, as.A.data(), n, as.B.data(), n, 1., as.C.data(), n);
       printArray(as.C.data(), n);
       printArray(as.output_data_floats.data(), n);
