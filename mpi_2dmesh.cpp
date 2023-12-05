@@ -50,7 +50,7 @@ void fill(double* p, int n) {
     static std::default_random_engine gen(rd());
     static std::uniform_real_distribution<> dis(-1.0, 1.0);
     for (int i = 0; i < n; ++i)
-        p[i] = i%8;
+        p[i] = i%14;
 }
 
 void printArray(double *A, int n, int m)
@@ -332,6 +332,22 @@ void do_rect_dgemm(double *A, double *B, double *C, int A_width, int A_height, i
    }
 }
 
+void square_dgemm(int n, double *A, double *B, double *C)
+{
+   for (int i = 0; i < n; i++)
+   {
+      for (int j = 0; j < n; j++)
+      {
+         double dot = 0.0;
+         for (int k = 0; k < n; k++)
+         {
+            dot += A[j + k * n] * B[i * n + k];
+         }
+         C[i * n + j] += dot;
+      }
+   }
+}
+
 void
 mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vector < Tile2D > > & BtileArray, vector < vector < Tile2D > > & CtileArray) {
    for (int row=0;row<CtileArray.size(); row++)
@@ -555,13 +571,10 @@ int main(int ac, char *av[]) {
 
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
-      scatterAllTiles(as.myrank, CtileArray, as.C.data(), as.global_mesh_size[0], as.global_mesh_size[1], 0, as.inputBuffer.data());
-      scatterAllTiles(as.myrank, AtileArray, as.A.data(), as.global_mesh_size[0], as.global_mesh_size[1], 1, as.inputBuffer.data());
-      scatterAllTiles(as.myrank, BtileArray, as.B.data(), as.global_mesh_size[0], as.global_mesh_size[1], 2, as.inputBuffer.data());
-      if(as.myrank==0){
-         printArray(as.A.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
-         printArray(as.inputBuffer.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
-      }
+      scatterAllTiles(as.myrank, CtileArray, as.C.data(), as.global_mesh_size[0], as.global_mesh_size[1], 0, as.buffer1.data());
+      scatterAllTiles(as.myrank, AtileArray, as.A.data(), as.global_mesh_size[0], as.global_mesh_size[1], 1, as.buffer1.data());
+      scatterAllTiles(as.myrank, BtileArray, as.B.data(), as.global_mesh_size[0], as.global_mesh_size[1], 2, as.buffer1.data());
+
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
       end_time = std::chrono::high_resolution_clock::now();
@@ -573,7 +586,87 @@ int main(int ac, char *av[]) {
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
 
+      double root = sqrt(as->nranks);
+      int edge = as->global_mesh_size[0] / (int) root;
       //mmulAllTiles(as.myrank, AtileArray, BtileArray, CtileArray);
+      if(as.myrank == 0){
+         std::vector<MPI_Request> send_requests(2);
+         std::vector<MPI_Request> recv_requests(2);
+         int tagA02=20;
+         int tagB01=10;
+         MPI_Isend(as.buffer1.data()+(edge*edge), edge*edge, MPI_DOUBLE, 2, tagA02, MPI_COMM_WORLD, &send_requests[0]);
+         MPI_Isend(as.buffer1.data()+(2*edge*edge), edge*edge, MPI_DOUBLE, 1, tagB01, MPI_COMM_WORLD, &send_requests[1]);
+         int tagA20=2;
+         int tagB10=1;
+         MPI_Irecv(as.buffer2.data()+(edge*edge), edge*edge, MPI_DOUBLE, 2, tagA20, MPI_COMM_WORLD, &recv_requests[0]);
+         MPI_Irecv(as.buffer2.data()+(2*edge*edge), edge*edge, MPI_DOUBLE, 1, tagB10, MPI_COMM_WORLD, &recv_requests[1]);
+
+         square_dgemm(edge, as.buffer1.data(), as.buffer1.data()+(edge*edge), as.buffer1.data()+(2*edge*edge));
+         MPI_Waitall(2, recv_requests.data(), MPI_STATUSES_IGNORE);
+         square_dgemm(edge, as.buffer1.data(), as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge));
+         MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
+         printArray(as.buffer1.data(), edge, edge);
+      }
+      else if(as.myrank==1){
+         //DO SOMETHING
+         std::vector<MPI_Request> send_requests(2);
+         std::vector<MPI_Request> recv_requests(2);
+         int tagA13=31;
+         int tagB10=1;
+         MPI_Isend(as.buffer1.data()+(edge*edge), edge*edge, MPI_DOUBLE, 3, tagA13, MPI_COMM_WORLD, &send_requests[0]);
+         MPI_Isend(as.buffer1.data()+(2*edge*edge), edge*edge, MPI_DOUBLE, 0, tagB10, MPI_COMM_WORLD, &send_requests[1]);
+         // copy B1 to buffer2
+         memcpy(as.buffer2.data()+(2*edge*edge), as.buffer1.data()+(2*edge*edge), edge*edge*sizeof(double));
+         int tagB01=10;
+         MPI_Irecv(as.buffer1.data()+(2*edge*edge), edge*edge, MPI_DOUBLE, 0, tagB01, MPI_COMM_WORLD, &recv_requests[0]);
+         MPI_Wait(&recv_requests[0], MPI_STATUS_IGNORE);
+         int tagA31=13;
+         MPI_Irecv(as.buffer2.data()+(edge*edge), edge*edge, MPI_DOUBLE, 3, tagA31, MPI_COMM_WORLD, &recv_requests[1]);
+         square_dgemm(edge, as.buffer1.data(), as.buffer1.data()+(edge*edge), as.buffer1.data()+(2*edge*edge));
+         MPI_Wait(&recv_requests[1], MPI_STATUS_IGNORE);
+         square_dgemm(edge, as.buffer1.data(), as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge));
+         MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
+
+      }
+      else if(as.myrank==2){
+         //DO SOMETHING
+         std::vector<MPI_Request> send_requests(2);
+         std::vector<MPI_Request> recv_requests(2);
+
+         int tagA20=2;
+         int tagB23=32;
+         MPI_Isend(as.buffer1.data()+(edge*edge), edge*edge, MPI_DOUBLE, 0, tagA20, MPI_COMM_WORLD, &send_requests[0]);
+         MPI_Isend(as.buffer1.data()+(2*edge*edge), edge*edge, MPI_DOUBLE, 3, tagB23, MPI_COMM_WORLD, &send_requests[1]);
+         //copy A3 to buffer2
+         memcpy(as.buffer2.data()+(edge*edge), as.buffer1.data()+(edge*edge), edge*edge*sizeof(double));
+         int tagA02=20;
+         MPI_Irecv(as.buffer1.data()+(edge*edge), edge*edge, MPI_DOUBLE, 0, tagA02, MPI_COMM_WORLD, &recv_requests[0]);
+         MPI_Wait(&recv_requests[0], MPI_STATUS_IGNORE);
+         int tagB32=23;
+         MPI_Irecv(as.buffer2.data()+(2*edge*edge), edge*edge, MPI_DOUBLE, 3, tagB32, MPI_COMM_WORLD, &recv_requests[1]);
+         square_dgemm(edge, as.buffer1.data(), as.buffer1.data()+(edge*edge), as.buffer1.data()+(2*edge*edge));
+         MPI_Wait(&recv_requests[1], MPI_STATUS_IGNORE);
+         square_dgemm(edge, as.buffer1.data(), as.buffer2.data()+(2*edge*edge), as.buffer2.data()+(2*edge*edge));
+         MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
+      }
+      else{
+         //DO SOMETHING
+         std::vector<MPI_Request> send_requests(2);
+         std::vector<MPI_Request> recv_requests(2);
+
+         int tagA31=13;
+         int tagB32=23;
+         MPI_Isend(as.buffer1.data()+(edge*edge), edge*edge, MPI_DOUBLE, 1, tagA31, MPI_COMM_WORLD, &send_requests[0]);
+         MPI_Isend(as.buffer1.data()+(2*edge*edge), edge*edge, MPI_DOUBLE, 2, tagB32, MPI_COMM_WORLD, &send_requests[1]);
+         int tagA13=31;
+         int tagB23=32;
+         MPI_Irecv(as.buffer2.data()+(edge*edge), edge*edge, MPI_DOUBLE, 1, tagA13, MPI_COMM_WORLD, &recv_requests[0]);
+         MPI_Irecv(as.buffer2.data()+(2*edge*edge), edge*edge, MPI_DOUBLE, 2, tagB23, MPI_COMM_WORLD, &recv_requests[1]);
+         square_dgemm(edge, as.buffer1.data(), as.buffer1.data()+(edge*edge), as.buffer1.data()+(2*edge*edge));
+         MPI_Waitall(2, recv_requests.data(), MPI_STATUSES_IGNORE);
+         square_dgemm(edge, as.buffer1.data(), as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge));
+         MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
+      }
 
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
@@ -611,8 +704,9 @@ int main(int ac, char *av[]) {
       printf("\tMmul time:\t%6.4f (ms) \n", elapsed_sobel_time*1000.0);
       printf("\tGather time:\t%6.4f (ms) \n", elapsed_gather_time*1000.0);
       int n=as.global_mesh_size[0];
+      printArray(as.C.data(), n, n);
       cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1.0, as.A.data(), n, as.B.data(), n, 1., as.C.data(), n);
-      //rintArray(as.C.data(), n, n);
+      printArray(as.C.data(), n, n);
       //printArray(as.output_data_floats.data(), n);
       if (check_accuracy(as.C.data(), as.output_data_floats.data(), n*n) == false)
             printf(" Error: your answer is not the same as that computed by BLAS. \n");

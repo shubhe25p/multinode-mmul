@@ -48,8 +48,8 @@ class AppState
    vector<double> B;
    vector<double> C;
 
-   vector<double> inputBuffer;
-   vector<double> outputBuffer;
+   vector<double> buffer1;
+   vector<double> buffer2;
 
    int Adecomp;
    int Bdecomp;
