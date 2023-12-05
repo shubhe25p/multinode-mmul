@@ -605,7 +605,16 @@ int main(int ac, char *av[]) {
          MPI_Waitall(2, recv_requests.data(), MPI_STATUSES_IGNORE);
          square_dgemm(edge, as.buffer1.data(), as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge));
          MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
+         printf("C00\n");
          printArray(as.buffer1.data(), edge, edge);
+         printf("A00\n");
+         printArray(as.buffer1.data()+(edge*edge), edge, edge);
+         printf("B00\n");
+         printArray(as.buffer1.data()+(2*edge*edge), edge, edge);
+         printf("A20\n");
+         printArray(as.buffer2.data()+(edge*edge), edge, edge);
+         printf("B10\n");
+         printArray(as.buffer2.data()+(2*edge*edge), edge, edge);
       }
       else if(as.myrank==1){
          //DO SOMETHING
