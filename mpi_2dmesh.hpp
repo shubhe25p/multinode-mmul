@@ -77,8 +77,8 @@ class AppState
       A.resize(global_mesh_size[0]*global_mesh_size[1]);
       B.resize(global_mesh_size[0]*global_mesh_size[1]);
       C.resize(global_mesh_size[0]*global_mesh_size[1]);
-      inputBuffer.resize(global_mesh_size[0]*global_mesh_size[1]);
-      outputBuffer.resize(global_mesh_size[0]*global_mesh_size[1]);
+      buffer1.resize(global_mesh_size[0]*global_mesh_size[1]);
+      buffer2.resize(global_mesh_size[0]*global_mesh_size[1]);
 
    } // end AppState constructor
 

@@ -586,8 +586,8 @@ int main(int ac, char *av[]) {
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
 
-      double root = sqrt(as->nranks);
-      int edge = as->global_mesh_size[0] / (int) root;
+      double root = sqrt(as.nranks);
+      int edge = as.global_mesh_size[0] / (int) root;
       //mmulAllTiles(as.myrank, AtileArray, BtileArray, CtileArray);
       if(as.myrank == 0){
          std::vector<MPI_Request> send_requests(2);
