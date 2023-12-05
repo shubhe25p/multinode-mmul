@@ -605,16 +605,6 @@ int main(int ac, char *av[]) {
          MPI_Waitall(2, recv_requests.data(), MPI_STATUSES_IGNORE);
          // square_dgemm(edge, as.buffer1.data(), as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge));
          MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
-         printf("C00\n");
-         printArray(as.buffer1.data(), edge, edge);
-         printf("A00\n");
-         printArray(as.buffer1.data()+(edge*edge), edge, edge);
-         printf("B00\n");
-         printArray(as.buffer1.data()+(2*edge*edge), edge, edge);
-         printf("A20\n");
-         printArray(as.buffer2.data()+(edge*edge), edge, edge);
-         printf("B10\n");
-         printArray(as.buffer2.data()+(2*edge*edge), edge, edge);
       }
       else if(as.myrank==1){
          //DO SOMETHING
@@ -625,8 +615,8 @@ int main(int ac, char *av[]) {
          MPI_Isend(as.buffer1.data()+(edge*edge), edge*edge, MPI_DOUBLE, 3, tagA13, MPI_COMM_WORLD, &send_requests[0]);
          MPI_Isend(as.buffer1.data()+(2*edge*edge), edge*edge, MPI_DOUBLE, 0, tagB10, MPI_COMM_WORLD, &send_requests[1]);
          // // copy B1 to buffer2
-         // memcpy(as.buffer2.data()+(2*edge*edge), as.buffer1.data()+(2*edge*edge), edge*edge*sizeof(double));
-         // int tagB01=10;
+         memcpy(as.buffer2.data()+(2*edge*edge), as.buffer1.data()+(2*edge*edge), edge*edge*sizeof(double));
+         int tagB01=10;
          MPI_Irecv(as.buffer1.data()+(2*edge*edge), edge*edge, MPI_DOUBLE, 0, tagB01, MPI_COMM_WORLD, &recv_requests[0]);
          MPI_Wait(&recv_requests[0], MPI_STATUS_IGNORE);
          int tagA31=13;
@@ -635,6 +625,16 @@ int main(int ac, char *av[]) {
          MPI_Wait(&recv_requests[1], MPI_STATUS_IGNORE);
          // square_dgemm(edge, as.buffer1.data(), as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge));
          MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
+         printf("C01\n");
+         printArray(as.buffer1.data(), edge, edge);
+         printf("A13\n");
+         printArray(as.buffer1.data()+(edge*edge), edge, edge);
+         printf("B10\n");
+         printArray(as.buffer1.data()+(2*edge*edge), edge, edge);
+         printf("A31\n");
+         printArray(as.buffer2.data()+(edge*edge), edge, edge);
+         printf("B01\n");
+         printArray(as.buffer2.data()+(2*edge*edge), edge, edge);
 
       }
       else if(as.myrank==2){
