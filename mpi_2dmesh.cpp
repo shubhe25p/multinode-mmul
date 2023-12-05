@@ -625,16 +625,6 @@ int main(int ac, char *av[]) {
          MPI_Wait(&recv_requests[1], MPI_STATUS_IGNORE);
          // square_dgemm(edge, as.buffer1.data(), as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge));
          MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
-         printf("C01\n");
-         printArray(as.buffer1.data(), edge, edge);
-         printf("A13\n");
-         printArray(as.buffer1.data()+(edge*edge), edge, edge);
-         printf("B10\n");
-         printArray(as.buffer1.data()+(2*edge*edge), edge, edge);
-         printf("A31\n");
-         printArray(as.buffer2.data()+(edge*edge), edge, edge);
-         printf("B01\n");
-         printArray(as.buffer2.data()+(2*edge*edge), edge, edge);
 
       }
       else if(as.myrank==2){
@@ -675,6 +665,16 @@ int main(int ac, char *av[]) {
          MPI_Waitall(2, recv_requests.data(), MPI_STATUSES_IGNORE);
          //square_dgemm(edge, as.buffer1.data(), as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge));
          MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
+         printf("C\n");
+         printArray(as.buffer1.data(), edge, edge);
+         printf("A\n");
+         printArray(as.buffer1.data()+(edge*edge), edge, edge);
+         printf("B\n");
+         printArray(as.buffer1.data()+(2*edge*edge), edge, edge);
+         printf("A\n");
+         printArray(as.buffer2.data()+(edge*edge), edge, edge);
+         printf("B\n");
+         printArray(as.buffer2.data()+(2*edge*edge), edge, edge);
       }
 
       // end the timer
