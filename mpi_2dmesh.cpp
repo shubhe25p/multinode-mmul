@@ -604,10 +604,10 @@ int main(int ac, char *av[]) {
          MPI_Irecv(as.buffer2.data()+(edge*edge), edge*edge, MPI_DOUBLE, 2, tagA20, MPI_COMM_WORLD, &recv_requests[0]);
          MPI_Irecv(as.buffer2.data()+(2*edge*edge), edge*edge, MPI_DOUBLE, 1, tagB10, MPI_COMM_WORLD, &recv_requests[1]);
          // compute A0*B0
-         square_dgemm(edge, as.buffer1.data(), as.buffer1.data()+(edge*edge), as.buffer1.data()+(2*edge*edge));
+         square_dgemm(edge, as.buffer1.data()+(edge*edge), as.buffer1.data()+(2*edge*edge), as.buffer1.data());
          MPI_Waitall(2, recv_requests.data(), MPI_STATUSES_IGNORE);
          // compute A2*B1
-         square_dgemm(edge, as.buffer1.data(), as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge));
+         square_dgemm(edge, as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge), as.buffer1.data());
          MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
          printf("C00\n");
          printArray(as.buffer1.data(), edge, edge);
@@ -642,12 +642,12 @@ int main(int ac, char *av[]) {
          int tagA31=13;
          MPI_Irecv(as.buffer2.data()+(edge*edge), edge*edge, MPI_DOUBLE, 3, tagA31, MPI_COMM_WORLD, &recv_requests[1]);
          // perform A2*B1
-         square_dgemm(edge, as.buffer1.data(), as.buffer1.data()+(edge*edge), as.buffer1.data()+(2*edge*edge));
+         square_dgemm(edge, as.buffer1.data()+(edge*edge), as.buffer1.data()+(2*edge*edge), as.buffer1.data());
 
          // wait for recv for A4
          MPI_Wait(&recv_requests[1], MPI_STATUS_IGNORE);
          // perform A4*B2
-         square_dgemm(edge, as.buffer1.data(), as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge));
+         square_dgemm(edge, as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge), as.buffer1.data());
          MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
 
 
@@ -685,10 +685,10 @@ int main(int ac, char *av[]) {
          int tagA02=20;
          MPI_Irecv(as.buffer2.data()+(edge*edge), edge*edge, MPI_DOUBLE, 0, tagA02, MPI_COMM_WORLD, &recv_requests[1]);
          // compute A3*B4
-         square_dgemm(edge, as.buffer1.data(), as.buffer1.data()+(edge*edge), as.buffer1.data()+(2*edge*edge));
+         square_dgemm(edge, as.buffer1.data()+(edge*edge), as.buffer1.data()+(2*edge*edge), as.buffer1.data());
          // wait for A1
          MPI_Wait(&recv_requests[1], MPI_STATUS_IGNORE);
-         square_dgemm(edge, as.buffer1.data(), as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge));
+         square_dgemm(edge, as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge), as.buffer1.data());
          MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
          
          printf("C2\n");
@@ -712,14 +712,14 @@ int main(int ac, char *av[]) {
          MPI_Irecv(as.buffer2.data()+(edge*edge), edge*edge, MPI_DOUBLE, 1, tagA13, MPI_COMM_WORLD, &recv_requests[0]);
          MPI_Irecv(as.buffer2.data()+(2*edge*edge), edge*edge, MPI_DOUBLE, 2, tagB23, MPI_COMM_WORLD, &recv_requests[1]);
 
-         square_dgemm(edge, as.buffer1.data(), as.buffer1.data()+(edge*edge), as.buffer1.data()+(2*edge*edge));
+         square_dgemm(edge, as.buffer1.data()+(edge*edge), as.buffer1.data()+(2*edge*edge), as.buffer1.data());
          MPI_Waitall(2, recv_requests.data(), MPI_STATUSES_IGNORE);
          int tagA31=13;
          int tagB32=23;
          MPI_Isend(as.buffer1.data()+(edge*edge), edge*edge, MPI_DOUBLE, 1, tagA31, MPI_COMM_WORLD, &send_requests[0]);
          MPI_Isend(as.buffer1.data()+(2*edge*edge), edge*edge, MPI_DOUBLE, 2, tagB32, MPI_COMM_WORLD, &send_requests[1]);
          
-         square_dgemm(edge, as.buffer1.data(), as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge));
+         square_dgemm(edge, as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge), as.buffer1.data());
          
          MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
 
