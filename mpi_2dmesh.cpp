@@ -439,7 +439,7 @@ scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *s,
 }
 
 void
-gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *d, int global_width, int global_height)
+gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *d, int global_width, int global_height, double *outputBuffer)
 {
 
    for (int row=0;row<tileArray.size(); row++)
@@ -455,7 +455,7 @@ gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *d, 
          if (myrank != 0 && t->tileRank == myrank)
          {
             // send the tile's output buffer to rank 0
-            sendStridedBuffer(t->C.data(), // ptr to the buffer to send
+            sendStridedBuffer(outputBuffer.data(), // ptr to the buffer to send
                t->width, t->height,  // size of the src buffer
                0, 0, // offset into the send buffer
                t->width, t->height,  // size of the buffer to send,
@@ -472,7 +472,7 @@ gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *d, 
             }
             else // copy from a tile owned by rank 0 back into the main buffer
             {
-               double *s = t->C.data();
+               double *s = outputBuffer.data();
                off_t s_offset=0, d_offset=0;
                d_offset = t->yloc * global_width + t->xloc;
 
@@ -609,16 +609,16 @@ int main(int ac, char *av[]) {
          // compute A2*B1
          square_dgemm(edge, as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge), as.buffer1.data());
          MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
-         printf("C00\n");
-         printArray(as.buffer1.data(), edge, edge);
-         printf("A1\n");
-         printArray(as.buffer1.data()+(edge*edge), edge, edge);
-         printf("B1\n");
-         printArray(as.buffer1.data()+(2*edge*edge), edge, edge);
-         printf("A3\n");
-         printArray(as.buffer2.data()+(edge*edge), edge, edge);
-         printf("B2\n");
-         printArray(as.buffer2.data()+(2*edge*edge), edge, edge);
+         // printf("C00\n");
+         // printArray(as.buffer1.data(), edge, edge);
+         // printf("A1\n");
+         // printArray(as.buffer1.data()+(edge*edge), edge, edge);
+         // printf("B1\n");
+         // printArray(as.buffer1.data()+(2*edge*edge), edge, edge);
+         // printf("A3\n");
+         // printArray(as.buffer2.data()+(edge*edge), edge, edge);
+         // printf("B2\n");
+         // printArray(as.buffer2.data()+(2*edge*edge), edge, edge);
          
       }
       else if(as.myrank==1){
@@ -651,16 +651,16 @@ int main(int ac, char *av[]) {
          MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
 
 
-         printf("C1\n");
-         printArray(as.buffer1.data(), edge, edge);
-         printf("A2\n");
-         printArray(as.buffer1.data()+(edge*edge), edge, edge);
-         printf("B1\n");
-         printArray(as.buffer1.data()+(2*edge*edge), edge, edge);
-         printf("A4\n");
-         printArray(as.buffer2.data()+(edge*edge), edge, edge);
-         printf("B2\n");
-         printArray(as.buffer2.data()+(2*edge*edge), edge, edge);
+         // printf("C1\n");
+         // printArray(as.buffer1.data(), edge, edge);
+         // printf("A2\n");
+         // printArray(as.buffer1.data()+(edge*edge), edge, edge);
+         // printf("B1\n");
+         // printArray(as.buffer1.data()+(2*edge*edge), edge, edge);
+         // printf("A4\n");
+         // printArray(as.buffer2.data()+(edge*edge), edge, edge);
+         // printf("B2\n");
+         // printArray(as.buffer2.data()+(2*edge*edge), edge, edge);
       }
       else if(as.myrank==2){
          //DO SOMETHING
@@ -691,16 +691,16 @@ int main(int ac, char *av[]) {
          square_dgemm(edge, as.buffer2.data()+(edge*edge), as.buffer2.data()+(2*edge*edge), as.buffer1.data());
          MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
          
-         printf("C2\n");
-         printArray(as.buffer1.data(), edge, edge);
-         printf("A3\n");
-         printArray(as.buffer1.data()+(edge*edge), edge, edge);
-         printf("B4\n");
-         printArray(as.buffer1.data()+(2*edge*edge), edge, edge);
-         printf("A1\n");
-         printArray(as.buffer2.data()+(edge*edge), edge, edge);
-         printf("B3\n");
-         printArray(as.buffer2.data()+(2*edge*edge), edge, edge);
+         // printf("C2\n");
+         // printArray(as.buffer1.data(), edge, edge);
+         // printf("A3\n");
+         // printArray(as.buffer1.data()+(edge*edge), edge, edge);
+         // printf("B4\n");
+         // printArray(as.buffer1.data()+(2*edge*edge), edge, edge);
+         // printf("A1\n");
+         // printArray(as.buffer2.data()+(edge*edge), edge, edge);
+         // printf("B3\n");
+         // printArray(as.buffer2.data()+(2*edge*edge), edge, edge);
       }
       else{
          //DO SOMETHING
@@ -723,16 +723,16 @@ int main(int ac, char *av[]) {
          
          MPI_Waitall(2, send_requests.data(), MPI_STATUSES_IGNORE);
 
-         printf("C3\n");
-         printArray(as.buffer1.data(), edge, edge);
-         printf("A3\n");
-         printArray(as.buffer1.data()+(edge*edge), edge, edge);
-         printf("B3\n");
-         printArray(as.buffer1.data()+(2*edge*edge), edge, edge);
-         printf("A1\n");
-         printArray(as.buffer2.data()+(edge*edge), edge, edge);
-         printf("B2\n");
-         printArray(as.buffer2.data()+(2*edge*edge), edge, edge);
+         // printf("C3\n");
+         // printArray(as.buffer1.data(), edge, edge);
+         // printf("A3\n");
+         // printArray(as.buffer1.data()+(edge*edge), edge, edge);
+         // printf("B3\n");
+         // printArray(as.buffer1.data()+(2*edge*edge), edge, edge);
+         // printf("A1\n");
+         // printArray(as.buffer2.data()+(edge*edge), edge, edge);
+         // printf("B2\n");
+         // printArray(as.buffer2.data()+(2*edge*edge), edge, edge);
       }
 
       // end the timer
@@ -755,7 +755,7 @@ int main(int ac, char *av[]) {
       // start the timer
       start_time = std::chrono::high_resolution_clock::now();
 
-      //gatherAllTiles(as.myrank, CtileArray, as.output_data_floats.data(), as.global_mesh_size[0], as.global_mesh_size[1]);
+      gatherAllTiles(as.myrank, CtileArray, as.output_data_floats.data(), as.global_mesh_size[0], as.global_mesh_size[1], as.buffer1.data());
 
       // end the timer
       MPI_Barrier(MPI_COMM_WORLD);
@@ -774,7 +774,7 @@ int main(int ac, char *av[]) {
       printArray(as.C.data(), n, n);
       cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1.0, as.A.data(), n, as.B.data(), n, 1., as.C.data(), n);
       printArray(as.C.data(), n, n);
-      //printArray(as.output_data_floats.data(), n);
+      printArray(as.output_data_floats.data(), n);
       if (check_accuracy(as.C.data(), as.output_data_floats.data(), n*n) == false)
             printf(" Error: your answer is not the same as that computed by BLAS. \n");
       else
