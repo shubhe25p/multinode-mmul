@@ -50,7 +50,7 @@ void fill(double* p, int n) {
     static std::default_random_engine gen(rd());
     static std::uniform_real_distribution<> dis(-1.0, 1.0);
     for (int i = 0; i < n; ++i)
-        p[i] = i%14;
+        p[i] = 2 * dis(gen) - 1;
 }
 
 void printArray(double *A, int n, int m)
@@ -319,19 +319,6 @@ recvStridedBuffer(double *dstBuf,
 }
 
 
-void do_rect_dgemm(double *A, double *B, double *C, int A_width, int A_height, int B_width, int B_height, int C_width, int C_height)
-{
-   for(int i=0;i<C_height;i++){
-      for(int j=0;j<C_width;j++){
-         double dot = 0.0;
-         for(int k=0;k<A_height;k++){
-            dot += A[k*A_width+j] * B[i*B_width+k];
-         }
-         C[i*C_width+j] += dot;
-      }
-   }
-}
-
 void square_dgemm(int n, double *A, double *B, double *C)
 {
    for (int i = 0; i < n; i++)
@@ -348,27 +335,6 @@ void square_dgemm(int n, double *A, double *B, double *C)
    }
 }
 
-void
-mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vector < Tile2D > > & BtileArray, vector < vector < Tile2D > > & CtileArray) {
-   for (int row=0;row<CtileArray.size(); row++)
-   {
-      for (int col=0; col<CtileArray[row].size(); col++)
-      {  
-         Tile2D *Ct = &(CtileArray[row][col]);
-         for(int k=0;k<BtileArray.size();k++)
-         {
-            Tile2D *Bt = &(BtileArray[k][0]);
-            for(int p=0;p<AtileArray[0].size();p++)
-            {
-               Tile2D *At = &(AtileArray[0][p]);
-               if(At->tileRank==Ct->tileRank && Bt->tileRank==Ct->tileRank && Ct->tileRank==myrank){
-                  do_rect_dgemm(At->A.data(), Bt->B.data(), Ct->C.data(), At->width, At->height, Bt->width, Bt->height, Ct->width, Ct->height);
-               }
-            }
-         }
-      }
-   }
-}
 
 void
 scatterAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *s, int global_width, int global_height, int jump, double *inputBuffer)
@@ -455,7 +421,7 @@ gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *d, 
          if (myrank != 0 && t->tileRank == myrank)
          {
             // send the tile's output buffer to rank 0
-            sendStridedBuffer(outputBuffer.data(), // ptr to the buffer to send
+            sendStridedBuffer(outputBuffer, // ptr to the buffer to send
                t->width, t->height,  // size of the src buffer
                0, 0, // offset into the send buffer
                t->width, t->height,  // size of the buffer to send,
@@ -472,7 +438,7 @@ gatherAllTiles(int myrank, vector < vector < Tile2D > > & tileArray, double *d, 
             }
             else // copy from a tile owned by rank 0 back into the main buffer
             {
-               double *s = outputBuffer.data();
+               double *s = outputBuffer;
                off_t s_offset=0, d_offset=0;
                d_offset = t->yloc * global_width + t->xloc;
 
@@ -771,10 +737,10 @@ int main(int ac, char *av[]) {
       printf("\tMmul time:\t%6.4f (ms) \n", elapsed_sobel_time*1000.0);
       printf("\tGather time:\t%6.4f (ms) \n", elapsed_gather_time*1000.0);
       int n=as.global_mesh_size[0];
-      printArray(as.C.data(), n, n);
+      // printArray(as.C.data(), n, n);
       cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1.0, as.A.data(), n, as.B.data(), n, 1., as.C.data(), n);
-      printArray(as.C.data(), n, n);
-      printArray(as.output_data_floats.data(), n);
+      // printArray(as.C.data(), n, n);
+      // printArray(as.output_data_floats.data(), n, n);
       if (check_accuracy(as.C.data(), as.output_data_floats.data(), n*n) == false)
             printf(" Error: your answer is not the same as that computed by BLAS. \n");
       else
