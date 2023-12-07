@@ -321,7 +321,19 @@ recvStridedBuffer(double *dstBuf,
 
 void square_dgemm(int n, double *A, double *B, double *C)
 {
-    cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1., A, n, B, n, 1., C, n);
+   for (int i = 0; i < n; i++)
+   {
+      for (int j = 0; j < n; j++)
+      {
+         double dot = 0.0;
+         for (int k = 0; k < n; k++)
+         {
+            dot += A[j + k * n] * B[i * n + k];
+         }
+         C[i * n + j] += dot;
+      }
+   }
+   // cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1., A, n, B, n, 1., C, n);
 }
 
 
