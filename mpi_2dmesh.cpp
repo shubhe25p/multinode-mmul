@@ -319,18 +319,18 @@ recvStridedBuffer(double *dstBuf,
 }
 
 
-void do_rect_dgemm(double *A, double *B, double *C, int A_width, int A_height, int B_width, int B_height, int C_width, int C_height)
+void do_rect_dgemm(double *B, double *A, double *C, int A_width, int A_height, int B_width, int B_height, int C_width, int C_height)
 {
-   for(int i=0;i<C_height;i++){
-      for(int j=0;j<C_width;j++){
-         double dot = 0.0;
-         for(int k=0;k<A_height;k++){
-            dot += A[k*A_width+j] * B[i*B_width+k];
-         }
-         C[i*C_width+j] += dot;
-      }
-   }
-   // cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, C_height, C_width, A_height, 1.0, A, A_height, B, B_height, 1., C, C_height);
+   // for(int i=0;i<C_height;i++){
+   //    for(int j=0;j<C_width;j++){
+   //       double dot = 0.0;
+   //       for(int k=0;k<A_height;k++){
+   //          dot += A[k*A_width+j] * B[i*B_width+k];
+   //       }
+   //       C[i*C_width+j] += dot;
+   //    }
+   // }
+   cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, C_height, C_width, A_height, 1.0, A, C_width, B, C_height, 1.0, C, C_height);
 }
 
 void
