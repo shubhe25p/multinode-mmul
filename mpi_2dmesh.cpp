@@ -50,7 +50,7 @@ void fill(double* p, int n) {
     static std::default_random_engine gen(rd());
     static std::uniform_real_distribution<> dis(-1.0, 1.0);
     for (int i = 0; i < n; ++i)
-        p[i] = 2*dis(gen)-1;
+        p[i] = i%14;
 }
 
 void printArray(double *A, int n, int m)
@@ -337,13 +337,18 @@ void do_rect_dgemm(double *A, double *B, double *C, int A_width, int A_height, i
       memcpy(&Acopy[i*C_width], &A[i*C_width], sizeof(double) * C_width);
       memcpy(&Bcopy[i*C_width], &B[i*C_width], sizeof(double) * C_width);
    }
+   printArray(Acopy, C_width, C_height);
+   printArray(Bcopy, C_width, C_height);
+   printArray(C, C_width, C_height);
    int n = C_width;
    cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1., Acopy, n, Bcopy, n, 1., C, n);
+   printArray(C, C_width, C_height);
    for(int i=0;i<C_height;i++){
       memcpy(&Acopy[i*C_width], &A[i*n+n*n], sizeof(double) * C_width);
       memcpy(&Bcopy[i*C_width], &B[2*i*n+n], sizeof(double) * C_width);
    }
    cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1., Acopy, n, Bcopy, n, 1., C, n);
+   printArray(C, C_width, C_height);
 }
 
 void
@@ -360,7 +365,9 @@ mmulAllTiles(int myrank, vector < vector < Tile2D > > & AtileArray, vector < vec
             {
                Tile2D *At = &(AtileArray[0][p]);
                if(At->tileRank==Ct->tileRank && Bt->tileRank==Ct->tileRank && Ct->tileRank==myrank){
+                  if(as.myrank==0){
                   do_rect_dgemm(At->A.data(), Bt->B.data(), Ct->C.data(), At->width, At->height, Bt->width, Bt->height, Ct->width, Ct->height);
+                  }
                }
             }
          }
@@ -648,8 +655,8 @@ int main(int ac, char *av[]) {
       printf("\tGather time:\t%6.4f (ms) \n", elapsed_gather_time*1000.0);
       int n=as.global_mesh_size[0];
       cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1.0, as.A.data(), n, as.B.data(), n, 1., as.C.data(), n);
-      //rintArray(as.C.data(), n, n);
-      //printArray(as.output_data_floats.data(), n);
+      printArray(as.C.data(), n, n);
+      printArray(as.output_data_floats.data(), n);
       if (check_accuracy(as.C.data(), as.output_data_floats.data(), n*n) == false)
             printf(" Error: your answer is not the same as that computed by BLAS. \n");
       else
