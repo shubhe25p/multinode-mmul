@@ -55,6 +55,9 @@ class AppState
    int Bdecomp;
    int Cdecomp;
 
+   std::chrono::time_point<std::chrono::high_resolution_clock> start_time, end_time;
+   std::chrono::duration<double> elapsed_mmul_time;
+
    AppState(void) {
       myrank = 0;
       nranks = 1;
