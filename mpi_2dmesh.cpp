@@ -334,14 +334,14 @@ void do_rect_dgemm(double *A, double *B, double *C, int A_width, int A_height, i
    double *Acopy = buf.data() + 0;
    double *Bcopy = Acopy + C_width * C_height;
    for(int i=0;i<C_height;i++){
-      memcpy(&Acopy[i*C_width], &A[i*A_width], sizeof(double) * C_width);
-      memcpy(&Bcopy[i*C_width], &B[i*B_width], sizeof(double) * C_width);
+      memcpy(&Acopy[i*C_width], &A[i*C_width], sizeof(double) * C_width);
+      memcpy(&Bcopy[i*C_width], &B[i*C_width], sizeof(double) * C_width);
    }
    int n = C_width;
    cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1., Acopy, n, Bcopy, n, 1., C, n);
    for(int i=0;i<C_height;i++){
       memcpy(&Acopy[i*C_width], &A[i*n+n*n], sizeof(double) * C_width);
-      memcpy(&Bcopy[i*C_width], &B[i*n+n], sizeof(double) * C_width);
+      memcpy(&Bcopy[i*C_width], &B[2*i*n+n], sizeof(double) * C_width);
    }
    cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1., Acopy, n, Bcopy, n, 1., C, n);
 }
