@@ -319,7 +319,7 @@ recvStridedBuffer(double *dstBuf,
 }
 
 
-void do_rect_dgemm(double *B, double *A, double *C, int A_width, int A_height, int B_width, int B_height, int C_width, int C_height)
+void do_rect_dgemm(double *A, double *B, double *C, int A_width, int A_height, int B_width, int B_height, int C_width, int C_height)
 {
    // for(int i=0;i<C_height;i++){
    //    for(int j=0;j<C_width;j++){
@@ -330,7 +330,20 @@ void do_rect_dgemm(double *B, double *A, double *C, int A_width, int A_height, i
    //       C[i*C_width+j] += dot;
    //    }
    // }
-   cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, C_height, C_width, A_height, 1.0, A, C_width, B, C_height, 1.0, C, C_height);
+   std::vector<double> buf(2 * C_width * C_height);
+   double *Acopy = buf.data() + 0;
+   double *Bcopy = Acopy + C_width * C_height;
+   for(int i=0;i<C_height;i++){
+      memcpy(&Acopy[i*C_width], &A[i*A_width], sizeof(double) * C_width);
+      memcpy(&Bcopy[i*C_width], &B[i*B_width], sizeof(double) * C_width);
+   }
+   int n = C_width;
+   cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1., Acopy, n, Bcopy, n, 1., C, n);
+   for(int i=0;i<C_height;i++){
+      memcpy(&Acopy[i*C_width], &A[i*n+n*n], sizeof(double) * C_width);
+      memcpy(&Bcopy[i*C_width], &B[i*n+n], sizeof(double) * C_width);
+   }
+   cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1., Acopy, n, Bcopy, n, 1., C, n);
 }
 
 void
