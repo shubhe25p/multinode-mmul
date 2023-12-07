@@ -647,7 +647,7 @@ int main(int ac, char *av[]) {
       printf("\tScatter time:\t%6.4f (ms) \n", elapsed_scatter_time*1000.0);
       printf("\tMmul time:\t%6.4f (ms) \n", elapsed_sobel_time*1000.0);
       printf("\tGather time:\t%6.4f (ms) \n", elapsed_gather_time*1000.0);
-      // int n=as.global_mesh_size[0];
+      int n=as.global_mesh_size[0];
       cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, 1.0, as.A.data(), n, as.B.data(), n, 1., as.C.data(), n);
       // printArray(as.C.data(), n, n);
       // printArray(as.output_data_floats.data(), n);
