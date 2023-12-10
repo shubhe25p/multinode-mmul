@@ -16,9 +16,9 @@ if (NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 endif ()
 
 # Common library target for benchmarking.
-add_library(benchmark OBJECT benchmark.cpp)
-#target_compile_features(benchmark PRIVATE cxx_std_11)
-target_compile_options(benchmark PRIVATE -fopenmp -march=native)
+# add_library(benchmark OBJECT benchmark.cpp)
+# #target_compile_features(benchmark PRIVATE cxx_std_11)
+# target_compile_options(benchmark PRIVATE -fopenmp -march=native)
 
 # add_executable(benchmark-blas dgemm-blas.cpp)
 # target_link_libraries(benchmark-blas PRIVATE benchmark ${BLAS_LIBRARIES})
