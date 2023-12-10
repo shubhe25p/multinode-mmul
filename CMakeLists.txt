@@ -22,11 +22,11 @@ target_include_directories(mpi_2dmesh PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_IN
 # link libraries
 target_link_libraries(mpi_2dmesh PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES} ${BLAS_LIBRARIES})
 
-add_executable(mpi_2dmesh_1 mpi_2dmesh_1.cpp)
+add_executable(mpi_2dmesh_blocking mpi_2dmesh_blocking.cpp)
 # include directories
-target_include_directories(mpi_2dmesh_1 PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+target_include_directories(mpi_2dmesh_blocking PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
 
 # link libraries
-target_link_libraries(mpi_2dmesh_1 PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES} ${BLAS_LIBRARIES})
+target_link_libraries(mpi_2dmesh_blocking PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES} ${BLAS_LIBRARIES})
 
 # eof
