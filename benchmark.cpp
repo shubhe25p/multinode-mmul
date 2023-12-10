@@ -106,7 +106,7 @@ int main(int argc, char** argv)
 
 
    // set up the problem sizes
-   int default_problem_sizes[] = {128, 512, 2048};
+   int default_problem_sizes[] = {1024, 2048, 4096, 7000};
    std::vector<int> test_sizes;
 
    if (cmdline_N > 0)
